@@ -7,14 +7,14 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: '#28A745',      // Primary Green - Growth & Community
-                secondary: '#218838',    // Secondary Green - Depth
-                accent: '#66BB6A',       // Accent Green - Energetic Highlight
-                'off-white': '#F8F9FA',  // Off-White - Subtle Contrast
-                'light-gray': '#E9ECEF', // Light Gray - Dividers
-                'text-dark': '#212529',  // Text Black - Readability
-                'forest-dark': '#1B5E20', // Deep Forest Green - Admin Theme
-                'forest-light': '#2E7D32', // Lighter Forest Green - Hover State
+                primary: '#3F9AAE',
+                secondary: '#79C9C5',
+                accent: '#F96E5B',
+                'off-white': '#FFF7E8',
+                'light-gray': '#FFE2AF',
+                'text-dark': '#243943',
+                'forest-dark': '#3F9AAE',
+                'forest-light': '#79C9C5',
             },
             fontFamily: {
                 sans: ['Inter', 'system-ui', 'sans-serif'],

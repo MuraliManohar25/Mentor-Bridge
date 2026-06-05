@@ -1,5 +1,5 @@
 """
-Quick script to add test users to the GradConnect database
+Quick script to add test users to the Mentor Bridge database
 Run this to populate your database with sample data
 """
 import requests

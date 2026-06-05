@@ -85,7 +85,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                                 <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center">
                                     <GraduationCap className="text-white" size={24} />
                                 </div>
-                                <span className="font-bold text-xl text-text-dark">GradConnect</span>
+                                <span className="font-bold text-xl text-text-dark">Mentor Bridge</span>
                             </Link>
                         )}
                         <button

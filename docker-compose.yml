@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: mentor_bridge_db
+      POSTGRES_USER: mentor_bridge
+      POSTGRES_PASSWORD: mentor_bridge123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mentor_bridge -d mentor_bridge_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      APP_NAME: Mentor Bridge
+      DEBUG: "True"
+      AUTO_CREATE_TABLES: "True"
+      DATABASE_URL: postgresql+asyncpg://mentor_bridge:mentor_bridge123@db:5432/mentor_bridge_db
+      SECRET_KEY: dev-secret-key-change-in-production-12345678901234567890
+      CORS_ORIGINS: http://localhost:5173,http://localhost:3000
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000/api
+        VITE_WS_URL: localhost:8000
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

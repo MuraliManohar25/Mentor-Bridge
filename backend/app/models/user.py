@@ -1,6 +1,5 @@
-from sqlalchemy import String, DateTime, Enum as SQLEnum, Boolean, Integer, JSON, ForeignKey
+from sqlalchemy import String, DateTime, Enum as SQLEnum, Boolean, Integer, JSON, ForeignKey, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 from enum import Enum
 from typing import Optional, List
@@ -17,7 +16,7 @@ class UserRole(str, Enum):
 
 class User(Base, UUIDMixin):
     """
-    User model for GradConnect platform.
+    User model for Mentor Bridge platform.
     
     Supports three stakeholder roles:
     - Admin: Platform administrators
@@ -93,7 +92,7 @@ class Profile(Base, UUIDMixin):
     
     # Foreign Key
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         unique=True,
         nullable=False,

@@ -4,7 +4,7 @@ description: Sync local folder with GitHub repository
 
 # Sync Local Folder with GitHub Repository
 
-This workflow helps you keep your local GradConnect folder synchronized with the GitHub repository at https://github.com/Aswithadari/GradConnect.
+This workflow helps you keep your local Mentor Bridge folder synchronized with the GitHub repository at https://github.com/Aswithadari/Mentor Bridge.
 
 ## Pull Latest Changes from GitHub
 

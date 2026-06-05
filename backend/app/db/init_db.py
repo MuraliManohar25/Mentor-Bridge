@@ -1,5 +1,5 @@
 """
-Database initialization script for GradConnect.
+Database initialization script for Mentor Bridge.
 
 Creates all database tables if they don't exist.
 """

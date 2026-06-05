@@ -8,13 +8,11 @@ import {
   Activity,
   Briefcase,
   Calendar,
-  Bell,
   Globe,
   CheckCircle,
   XCircle,
   LogOut,
   Search,
-  Filter,
   BarChart3,
   PlusCircle,
   Megaphone,
@@ -26,7 +24,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const {
     stats,
     users,

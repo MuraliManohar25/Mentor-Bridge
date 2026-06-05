@@ -2,17 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, GraduationCap, AlertCircle, CheckCircle } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { z } from 'zod';
-
-// Zod validation schema
-const loginSchema = z.object({
-    email: z.string().email('Invalid email address'),
-    password: z.string().min(1, 'Password is required'),
-});
 
 const Login: React.FC = () => {
-    const { login } = useAuth();
     const [formData, setFormData] = useState({ email: '', password: '', rememberMe: false, role: 'student' as 'student' | 'alumni' | 'admin' });
     const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string; role?: string }>({});
     const [loading, setLoading] = useState(false);
@@ -80,7 +71,7 @@ const Login: React.FC = () => {
                             <GraduationCap className="text-white w-8 h-8" />
                         </motion.div>
                         <h1 className="text-3xl font-bold text-text-dark mb-2 tracking-tight">Welcome Back</h1>
-                        <p className="text-gray-600">Sign in to your GradConnect account</p>
+                        <p className="text-gray-600">Sign in to your Mentor Bridge account</p>
                     </div>
 
                     {errors.general && (

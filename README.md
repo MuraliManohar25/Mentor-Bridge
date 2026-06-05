@@ -1,4 +1,4 @@
-# 🎓 GradConnect - Alumni Management Platform
+# 🎓 Mentor Bridge - Alumni Management Platform
 
 A comprehensive Alumni Management Platform built with **FastAPI** (async backend), **React** (TypeScript frontend), and **PostgreSQL**. Designed for educational institutions to manage alumni networks, mentorship programs, events, jobs, donations, and community engagement.
 
@@ -15,7 +15,7 @@ A comprehensive Alumni Management Platform built with **FastAPI** (async backend
 ### Project Structure
 
 ```
-GradConnect/
+Mentor Bridge/
 ├── backend/
 │   ├── app/
 │   │   ├── api/          # API routes
@@ -52,8 +52,8 @@ GradConnect/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Aswithadari/GradConnect.git
-   cd GradConnect
+   git clone https://github.com/Aswithadari/Mentor Bridge.git
+   cd Mentor Bridge
    ```
 
 2. **Start all services**
@@ -205,7 +205,7 @@ docker-compose logs -f
 docker-compose exec backend bash
 
 # Access database
-docker-compose exec db psql -U gradconnect -d gradconnect_db
+docker-compose exec db psql -U mentor_bridge -d mentor_bridge_db
 ```
 
 ## 🔐 Environment Variables
@@ -213,7 +213,7 @@ docker-compose exec db psql -U gradconnect -d gradconnect_db
 ### Backend (.env)
 
 ```env
-DATABASE_URL=postgresql+asyncpg://user:password@db:5432/gradconnect_db
+DATABASE_URL=postgresql+asyncpg://user:password@db:5432/mentor_bridge_db
 SECRET_KEY=your-secret-key
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30

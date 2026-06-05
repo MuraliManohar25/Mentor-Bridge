@@ -43,7 +43,7 @@ const Home = () => {
 
     return (
         <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-            <h1>🎓 GradConnect</h1>
+            <h1>🎓 Mentor Bridge</h1>
             <p style={{ fontSize: '1.2rem', color: '#666' }}>
                 Alumni Management Platform - Phase 1 Skeleton
             </p>

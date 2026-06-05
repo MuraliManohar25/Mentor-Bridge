@@ -3,13 +3,14 @@
 @tailwind utilities;
 
 :root {
-  /* GradConnect Color Palette */
-  --color-primary-green: #28A745;     /* Primary Green - Growth & Community */
-  --color-secondary-green: #218838;   /* Secondary Green - Depth */
-  --color-accent-green: #66BB6A;      /* Accent Green - Energetic Highlight */
-  --color-off-white: #F8F9FA;         /* Off-White - Subtle Contrast */
-  --color-light-gray: #E9ECEF;        /* Light Gray - Dividers */
-  --color-text-dark: #212529;         /* Text Black - Readability */
+  /* Mentor Bridge Color Palette */
+  --color-primary: #3F9AAE;
+  --color-secondary: #79C9C5;
+  --color-accent: #F96E5B;
+  --color-warm: #FFE2AF;
+  --color-off-white: #FFF7E8;
+  --color-light-gray: #FFE2AF;
+  --color-text-dark: #243943;
 
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -17,7 +18,7 @@
 
   color-scheme: light;
   color: var(--color-text-dark);
-  background-color: #ffffff;
+  background-color: var(--color-off-white);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -27,7 +28,7 @@
 
 @layer utilities {
   .glass {
-    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-lg;
+    @apply bg-white/80 backdrop-blur-md border border-light-gray/60 shadow-lg;
   }
 
   .glass-dark {
@@ -35,7 +36,7 @@
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-accent;
   }
 }
 
@@ -48,11 +49,7 @@ body {
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-
-  button {
-    background-color: #f9f9f9;
+    color: #243943;
+    background-color: #FFF7E8;
   }
 }

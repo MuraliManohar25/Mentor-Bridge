@@ -1,4 +1,4 @@
-# GradConnect - Quick Start Commands
+# Mentor Bridge - Quick Start Commands
 
 ## 🚀 Getting Started
 
@@ -78,7 +78,7 @@ ws.send('Hello from client!');
 
 ### 3. Database Access
 ```bash
-docker-compose exec db psql -U gradconnect -d gradconnect_db
+docker-compose exec db psql -U mentor_bridge -d mentor_bridge_db
 ```
 
 ---
@@ -97,7 +97,7 @@ docker-compose down -v
 docker-compose exec backend bash
 
 # Access database
-docker-compose exec db psql -U gradconnect -d gradconnect_db
+docker-compose exec db psql -U mentor_bridge -d mentor_bridge_db
 ```
 
 ### Backend

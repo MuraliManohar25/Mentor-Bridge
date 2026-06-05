@@ -118,7 +118,7 @@ const LandingPage: React.FC = () => {
                             {/* Badge */}
                             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-6">
                                 <span className="h-2 w-2 bg-primary rounded-full animate-pulse"></span>
-                                <span className="text-sm font-semibold text-primary">Trusted by 5,000+ Alumni</span>
+                                <span className="text-sm font-semibold text-primary">A Trusted Platform to Build your Career</span>
                             </div>
 
                             <h1 className="text-5xl md:text-7xl font-extrabold text-text-dark tracking-tight leading-tight mb-6">
@@ -128,7 +128,7 @@ const LandingPage: React.FC = () => {
                                 </span>
                             </h1>
                             <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-                                GradConnect bridges the gap between students and alumni. Unlock mentorships,
+                                Mentor Bridge bridges the gap between students and alumni. Unlock mentorships,
                                 discover career opportunities, and build lifelong professional relationships.
                             </p>
 
@@ -222,10 +222,10 @@ const LandingPage: React.FC = () => {
             </section>
 
             {/* Feature Highlights */}
-            <section id="features" className="py-24 bg-white">
+            <section id="features" className="scroll-mt-24 py-24 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
-                        <h2 className="text-base text-primary font-bold tracking-wide uppercase mb-3">Why GradConnect?</h2>
+                        <h2 className="text-base text-primary font-bold tracking-wide uppercase mb-3">Why Mentor Bridge?</h2>
                         <h3 className="text-4xl md:text-5xl leading-tight font-extrabold text-text-dark mb-4">
                             Empowering Your <span className="text-primary">Professional Journey</span>
                         </h3>
@@ -280,7 +280,7 @@ const LandingPage: React.FC = () => {
             </section>
 
             {/* About/Testimonials Section */}
-            <section id="about" className="py-24 bg-gradient-to-b from-off-white to-white">
+            <section id="about" className="scroll-mt-24 py-24 bg-gradient-to-b from-off-white to-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                         <motion.div
@@ -293,7 +293,7 @@ const LandingPage: React.FC = () => {
                             </h2>
                             <div className="space-y-6">
                                 <p className="text-lg text-gray-600 leading-relaxed">
-                                    "GradConnect has been a game-changer for my career. I found my current mentor here,
+                                    "Mentor Bridge has been a game-changer for my career. I found my current mentor here,
                                     and their guidance helped me land my dream job at a top tech firm."
                                 </p>
                                 <div className="flex items-center gap-1 text-yellow-400">
@@ -353,7 +353,7 @@ const LandingPage: React.FC = () => {
                                 <div className="bg-primary p-2 rounded-lg">
                                     <GraduationCap className="h-6 w-6 text-white" />
                                 </div>
-                                <span className="text-2xl font-bold">GradConnect</span>
+                                <span className="text-2xl font-bold">Mentor Bridge</span>
                             </div>
                             <p className="text-sm text-gray-400 leading-relaxed">
                                 Connecting alumni and students for a brighter, more successful future.
@@ -392,7 +392,7 @@ const LandingPage: React.FC = () => {
 
                     <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
                         <p className="text-sm text-gray-500">
-                            &copy; {new Date().getFullYear()} GradConnect. All rights reserved.
+                            &copy; {new Date().getFullYear()} Mentor Bridge. All rights reserved.
                         </p>
                         <div className="flex gap-6 mt-4 md:mt-0 text-sm">
                             <a href="#" className="hover:text-primary transition-colors">Privacy</a>

@@ -91,7 +91,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
 async def root():
     """Root endpoint."""
     return {
-        "message": "GradConnect API",
+        "message": "Mentor Bridge API",
         "version": "1.0.0",
         "docs": "/docs"
     }

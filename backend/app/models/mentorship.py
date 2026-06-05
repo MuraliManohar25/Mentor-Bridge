@@ -1,6 +1,5 @@
-from sqlalchemy import String, DateTime, Enum as SQLEnum, Text, ForeignKey
+from sqlalchemy import String, DateTime, Enum as SQLEnum, Text, ForeignKey, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 from enum import Enum
 from typing import Optional
@@ -26,14 +25,14 @@ class MentorshipRequest(Base, UUIDMixin):
     
     # Foreign Keys
     student_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True
     )
     
     alumni_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True

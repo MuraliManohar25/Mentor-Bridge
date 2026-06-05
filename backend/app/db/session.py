@@ -2,16 +2,14 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from app.core.config import settings
 from typing import AsyncGenerator
 
-# Create async engine - Using SQLite for local development
-SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///./gradconnect.db"
+connect_args = {"check_same_thread": False} if settings.is_sqlite else {}
 
 engine = create_async_engine(
-    SQLALCHEMY_DATABASE_URL,
+    settings.DATABASE_URL,
     echo=settings.DEBUG,
     future=True,
-    connect_args={"check_same_thread": False},
-    pool_size=10,
-    max_overflow=20
+    connect_args=connect_args,
+    pool_pre_ping=True,
 )
 
 # Create async session factory

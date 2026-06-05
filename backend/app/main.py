@@ -42,16 +42,20 @@ async def lifespan(app: FastAPI):
     - Close database connections gracefully
     """
     # Startup
-    print(f"🚀 Starting {settings.APP_NAME}...")
-    await init_db(engine)
-    print(f"✅ {settings.APP_NAME} is ready!")
+    settings.validate_production_settings()
+    print(f"Starting {settings.APP_NAME}...")
+    if settings.AUTO_CREATE_TABLES:
+        await init_db(engine)
+    else:
+        print("Skipping automatic table creation. Run Alembic migrations before starting the app.")
+    print(f"{settings.APP_NAME} is ready!")
     
     yield
     
     # Shutdown
-    print(f"🛑 Shutting down {settings.APP_NAME}...")
+    print(f"Shutting down {settings.APP_NAME}...")
     await engine.dispose()
-    print(f"✅ {settings.APP_NAME} shutdown complete")
+    print(f"{settings.APP_NAME} shutdown complete")
 
 
 # Initialize FastAPI application

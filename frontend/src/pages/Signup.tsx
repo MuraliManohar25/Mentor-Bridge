@@ -2,56 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, GraduationCap, AlertCircle, ShieldCheck } from 'lucide-react';
-import { useAuth, type UserRole } from '../context/AuthContext';
-import { z } from 'zod';
-
-// Zod validation schema with strong password requirements
-const signupSchema = z.object({
-    full_name: z.string().min(2, 'Name must be at least 2 characters'),
-    email: z.string().email('Invalid email address'),
-    password: z.string()
-        .min(8, 'Password must be at least 8 characters')
-        .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-        .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-        .regex(/[0-9]/, 'Password must contain at least one number')
-        .regex(/[^A-Za-z0-9]/, 'Password must contain at least one symbol'),
-    confirmPassword: z.string(),
-    role: z.enum(['student', 'alumni', 'admin']),
-    // Optional fields for students
-    graduation_year: z.number().optional(),
-    department: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ['confirmPassword'],
-}).refine((data) => {
-    // Validate college email for students
-    if (data.role === 'student') {
-        const email = data.email.toLowerCase();
-        return email.endsWith('.edu') || email.includes('college') || email.includes('university') || email.includes('.ac.');
-    }
-    return true;
-}, {
-    message: "Students must register with a college/university email (.edu, college, or university domain)",
-    path: ['email'],
-}).refine((data) => {
-    // Require graduation year for students
-    if (data.role === 'student' && !data.graduation_year) {
-        return false;
-    }
-    return true;
-}, {
-    message: "Graduation year is required for students",
-    path: ['graduation_year'],
-}).refine((data) => {
-    // Require department for students
-    if (data.role === 'student' && !data.department) {
-        return false;
-    }
-    return true;
-}, {
-    message: "Department is required for students",
-    path: ['department'],
-});
+import type { UserRole } from '../context/AuthContext';
 
 // Password strength calculator
 const calculatePasswordStrength = (password: string): { strength: number; label: string; color: string } => {
@@ -78,7 +29,6 @@ const calculatePasswordStrength = (password: string): { strength: number; label:
 };
 
 const Signup: React.FC = () => {
-    const { register } = useAuth();
     const [formData, setFormData] = useState({
         full_name: '',
         email: '',
@@ -160,7 +110,7 @@ const Signup: React.FC = () => {
                             <GraduationCap className="text-white w-8 h-8" />
                         </motion.div>
                         <h1 className="text-3xl font-bold text-text-dark mb-2">Create Account</h1>
-                        <p className="text-gray-600">Join the GradConnect community</p>
+                        <p className="text-gray-600">Join the Mentor Bridge community</p>
                     </div>
 
                     {errors.general && (

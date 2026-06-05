@@ -20,7 +20,6 @@ const StudentDashboard: React.FC = () => {
     events,
     announcements,
     loading,
-    error,
     searchAlumni,
     toggleSaveJob,
     toggleRSVP,

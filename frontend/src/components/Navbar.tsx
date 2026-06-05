@@ -22,7 +22,30 @@ const Navbar: React.FC = () => {
         { name: 'Features', path: '/#features' },
     ];
 
-    const isActive = (path: string) => location.pathname === path;
+    const isActive = (path: string) => {
+        if (path === '/') {
+            return location.pathname === '/' && !location.hash;
+        }
+
+        return location.pathname === '/' && location.hash === path.replace('/', '');
+    };
+
+    const handleNavClick = (event: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+        if (!path.startsWith('/#')) {
+            return;
+        }
+
+        const sectionId = path.slice(2);
+
+        if (location.pathname !== '/') {
+            return;
+        }
+
+        event.preventDefault();
+        setIsOpen(false);
+        window.history.pushState(null, '', path);
+        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
 
     return (
         <nav
@@ -40,16 +63,17 @@ const Navbar: React.FC = () => {
                             <GraduationCap className="h-7 w-7 text-primary" />
                         </div>
                         <span className="text-2xl font-bold text-text-dark">
-                            Grad<span className="text-primary">Connect</span>
+                            Mentor <span className="text-primary">Bridge</span>
                         </span>
                     </Link>
 
                     {/* Desktop Navigation */}
                     <div className="hidden md:flex items-center space-x-8">
                         {navLinks.map((link) => (
-                            <Link
+                            <a
                                 key={link.name}
-                                to={link.path}
+                                href={link.path}
+                                onClick={(event) => handleNavClick(event, link.path)}
                                 className={`text-sm font-semibold transition-colors duration-200 hover:text-primary relative ${
                                     isActive(link.path) ? 'text-primary' : 'text-gray-600'
                                 }`}
@@ -61,7 +85,7 @@ const Navbar: React.FC = () => {
                                         className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary"
                                     />
                                 )}
-                            </Link>
+                            </a>
                         ))}
                     </div>
 
@@ -106,10 +130,10 @@ const Navbar: React.FC = () => {
                     >
                         <div className="px-4 pt-4 pb-6 space-y-3">
                             {navLinks.map((link) => (
-                                <Link
+                                <a
                                     key={link.name}
-                                    to={link.path}
-                                    onClick={() => setIsOpen(false)}
+                                    href={link.path}
+                                    onClick={(event) => handleNavClick(event, link.path)}
                                     className={`block px-4 py-3 rounded-lg text-base font-semibold transition-all duration-200 ${
                                         isActive(link.path)
                                             ? 'bg-primary text-white'
@@ -117,7 +141,7 @@ const Navbar: React.FC = () => {
                                     }`}
                                 >
                                     {link.name}
-                                </Link>
+                                </a>
                             ))}
                             <div className="pt-4 border-t border-light-gray space-y-3">
                                 <Link
