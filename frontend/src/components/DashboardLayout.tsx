@@ -3,9 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Home,
-    Users,
-    Briefcase,
-    Calendar,
     MessageCircle,
     Bell,
     Settings,
@@ -30,30 +27,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
     const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
     const studentLinks = [
-        { name: 'Dashboard', icon: Home, path: '/student' },
-        { name: 'Alumni Directory', icon: Users, path: '/student/alumni' },
-        { name: 'Career Events', icon: Calendar, path: '/student/events' },
-        { name: 'Job Opportunities', icon: Briefcase, path: '/student/jobs' },
-        { name: 'Find Mentor', icon: GraduationCap, path: '/student/mentors' },
-        { name: 'Messages', icon: MessageCircle, path: '/student/messages' },
+        { name: 'Dashboard', icon: Home, path: '/student/dashboard' },
     ];
 
     const alumniLinks = [
-        { name: 'Dashboard', icon: Home, path: '/alumni' },
-        { name: 'Alumni Network', icon: Users, path: '/alumni/network' },
-        { name: 'Post Job', icon: Briefcase, path: '/alumni/post-job' },
-        { name: 'My Job Posts', icon: Briefcase, path: '/alumni/jobs' },
-        { name: 'Schedule Event', icon: Calendar, path: '/alumni/schedule-event' },
-        { name: 'My Events', icon: Calendar, path: '/alumni/events' },
-        { name: 'Messages', icon: MessageCircle, path: '/alumni/messages' },
+        { name: 'Dashboard', icon: Home, path: '/alumni/dashboard' },
     ];
 
     const adminLinks = [
-        { name: 'Dashboard', icon: Home, path: '/admin' },
-        { name: 'User Management', icon: Users, path: '/admin/users' },
-        { name: 'Event Management', icon: Calendar, path: '/admin/events' },
-        { name: 'Job Management', icon: Briefcase, path: '/admin/jobs' },
-        { name: 'Analytics', icon: Settings, path: '/admin/analytics' },
+        { name: 'Dashboard', icon: Home, path: '/admin/dashboard' },
     ];
 
     const links = role === 'student' ? studentLinks : role === 'alumni' ? alumniLinks : adminLinks;

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Loader2, CheckCircle } from 'lucide-react';
 import { Alumni } from '../hooks/useStudentDashboard';
+import { sendMentorshipRequest } from '../services/mentorshipService';
 
 interface MentorModalProps {
   isOpen: boolean;
@@ -13,41 +14,31 @@ const MentorModal: React.FC<MentorModalProps> = ({ isOpen, onClose, alumni }) =>
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || !alumni) return;
 
     setLoading(true);
-    
-    // Demo mode: Simulate API call
-    setTimeout(() => {
-      setLoading(false);
+    setError(null);
+
+    try {
+      await sendMentorshipRequest({
+        alumni_id: alumni.id,
+        message: message.trim(),
+      });
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
         setMessage('');
         onClose();
       }, 2000);
-    }, 1000);
-
-    // Production mode:
-    // try {
-    //   await apiClient.post('/mentorship-requests', {
-    //     mentor_id: alumni.id,
-    //     request_message: message,
-    //   });
-    //   setSuccess(true);
-    //   setTimeout(() => {
-    //     onClose();
-    //     setSuccess(false);
-    //     setMessage('');
-    //   }, 2000);
-    // } catch (error) {
-    //   console.error('Failed to send mentorship request:', error);
-    // } finally {
-    //   setLoading(false);
-    // }
+    } catch (err: any) {
+      setError(err.message || 'Failed to send mentorship request');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!alumni) return null;
@@ -56,7 +47,6 @@ const MentorModal: React.FC<MentorModalProps> = ({ isOpen, onClose, alumni }) =>
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -65,7 +55,6 @@ const MentorModal: React.FC<MentorModalProps> = ({ isOpen, onClose, alumni }) =>
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
           />
 
-          {/* Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -73,7 +62,6 @@ const MentorModal: React.FC<MentorModalProps> = ({ isOpen, onClose, alumni }) =>
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              {/* Header */}
               <div className="sticky top-0 bg-gradient-to-r from-primary to-accent p-6 rounded-t-2xl">
                 <div className="flex items-start justify-between">
                   <div>
@@ -89,9 +77,7 @@ const MentorModal: React.FC<MentorModalProps> = ({ isOpen, onClose, alumni }) =>
                 </div>
               </div>
 
-              {/* Content */}
               <div className="p-6">
-                {/* Alumni Info */}
                 <div className="bg-gray-50 rounded-xl p-4 mb-6">
                   <div className="flex items-start gap-4">
                     <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center text-2xl font-bold">
@@ -99,9 +85,13 @@ const MentorModal: React.FC<MentorModalProps> = ({ isOpen, onClose, alumni }) =>
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg text-gray-900">{alumni.name}</h3>
-                      <p className="text-gray-600 text-sm">{alumni.profile.position} at {alumni.profile.company}</p>
-                      <p className="text-gray-500 text-sm mt-1">{alumni.profile.department} • Class of {alumni.profile.graduation_year}</p>
-                      
+                      <p className="text-gray-600 text-sm">
+                        {alumni.profile.position} at {alumni.profile.company}
+                      </p>
+                      <p className="text-gray-500 text-sm mt-1">
+                        {alumni.profile.department} • Class of {alumni.profile.graduation_year}
+                      </p>
+
                       {alumni.profile.skills && alumni.profile.skills.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-3">
                           {alumni.profile.skills.map((skill, index) => (
@@ -118,7 +108,12 @@ const MentorModal: React.FC<MentorModalProps> = ({ isOpen, onClose, alumni }) =>
                   </div>
                 </div>
 
-                {/* Success Message */}
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 mb-6 text-sm">
+                    {error}
+                  </div>
+                )}
+
                 {success && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
@@ -133,7 +128,6 @@ const MentorModal: React.FC<MentorModalProps> = ({ isOpen, onClose, alumni }) =>
                   </motion.div>
                 )}
 
-                {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -141,19 +135,16 @@ const MentorModal: React.FC<MentorModalProps> = ({ isOpen, onClose, alumni }) =>
                     </label>
                     <textarea
                       value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Introduce yourself and explain why you'd like mentorship from this alumni. Be specific about what you hope to learn..."
+                      onChange={(e) => setMessage(e.target.value.slice(0, 500))}
+                      placeholder="Introduce yourself and explain why you'd like mentorship from this alumni..."
                       rows={6}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
                       required
                       disabled={loading || success}
                     />
-                    <p className="text-sm text-gray-500 mt-2">
-                      {message.length}/500 characters
-                    </p>
+                    <p className="text-sm text-gray-500 mt-2">{message.length}/500 characters</p>
                   </div>
 
-                  {/* Actions */}
                   <div className="flex gap-3 pt-4">
                     <button
                       type="button"

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, GraduationCap, AlertCircle, ShieldCheck } from 'lucide-react';
 import type { UserRole } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { getDashboardPath } from '../components/ProtectedRoute';
 
 // Password strength calculator
 const calculatePasswordStrength = (password: string): { strength: number; label: string; color: string } => {
@@ -29,6 +31,8 @@ const calculatePasswordStrength = (password: string): { strength: number; label:
 };
 
 const Signup: React.FC = () => {
+    const navigate = useNavigate();
+    const { register } = useAuth();
     const [formData, setFormData] = useState({
         full_name: '',
         email: '',
@@ -70,18 +74,32 @@ const Signup: React.FC = () => {
         setErrors({});
         setLoading(true);
 
-        // Dummy signup - just redirect based on role
-        setTimeout(() => {
-            // Navigate based on role
-            if (formData.role === 'student') {
-                window.location.href = '/student/dashboard';
-            } else if (formData.role === 'alumni') {
-                window.location.href = '/alumni/dashboard';
-            } else if (formData.role === 'admin') {
-                window.location.href = '/admin/dashboard';
-            }
+        const newErrors: Record<string, string> = {};
+        if (!formData.full_name.trim()) newErrors.full_name = 'Full name is required';
+        if (!formData.email.trim()) newErrors.email = 'Email is required';
+        if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+        if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
             setLoading(false);
-        }, 500);
+            return;
+        }
+
+        try {
+            const user = await register({
+                email: formData.email,
+                password: formData.password,
+                full_name: formData.full_name,
+                role: formData.role,
+                graduation_year: formData.graduation_year,
+                department: formData.department || undefined,
+            });
+            navigate(getDashboardPath(user.role));
+        } catch (error: any) {
+            setErrors({ general: error.message || 'Registration failed. Please try again.' });
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

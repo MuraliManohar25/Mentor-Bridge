@@ -15,6 +15,9 @@ from app.api.auth import router as auth_router
 from app.api.alumni import router as alumni_router
 from app.api.mentorship import router as mentorship_router
 from app.api.admin import router as admin_router
+from app.api.jobs import router as jobs_router
+from app.api.events import router as events_router
+from app.api.announcements import router as announcements_router
 
 
 # Security headers middleware
@@ -129,6 +132,9 @@ app.include_router(auth_router, prefix="/api", tags=["authentication"])
 app.include_router(alumni_router, prefix="/api", tags=["alumni"])
 app.include_router(mentorship_router, prefix="/api", tags=["mentorship"])
 app.include_router(admin_router, prefix="/api", tags=["admin"])
+app.include_router(jobs_router, prefix="/api", tags=["jobs"])
+app.include_router(events_router, prefix="/api", tags=["events"])
+app.include_router(announcements_router, prefix="/api", tags=["announcements"])
 
 
 @app.get("/")

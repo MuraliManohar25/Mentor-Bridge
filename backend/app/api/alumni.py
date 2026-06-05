@@ -45,6 +45,7 @@ async def search_alumni(
     # Base query: Alumni role, active users, with profile loaded
     query = (
         select(User)
+        .join(Profile, User.id == Profile.user_id)
         .options(joinedload(User.profile))
         .where(User.role == UserRole.ALUMNI)
         .where(User.is_active == True)
@@ -56,7 +57,8 @@ async def search_alumni(
         search_filter = or_(
             User.full_name.ilike(search_pattern),
             Profile.current_company.ilike(search_pattern),
-            Profile.bio.ilike(search_pattern)
+            Profile.bio.ilike(search_pattern),
+            Profile.department.ilike(search_pattern),
         )
         query = query.where(search_filter)
     
@@ -67,6 +69,8 @@ async def search_alumni(
     # Filter by mentor availability
     if is_mentor is not None:
         query = query.where(Profile.is_mentor == is_mentor)
+    else:
+        query = query.where(Profile.is_mentor == True)
     
     # Filter by expertise (JSON array contains)
     if expertise:

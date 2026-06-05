@@ -7,6 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from app.db.base import Base
 from app.models.user import User, Profile
 from app.models.mentorship import MentorshipRequest
+from app.models.job import Job
+from app.models.event import Event, EventRSVP
+from app.models.announcement import Announcement
 import logging
 
 logger = logging.getLogger(__name__)

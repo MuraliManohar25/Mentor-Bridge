@@ -23,6 +23,7 @@ const StudentDashboard: React.FC = () => {
     searchAlumni,
     toggleSaveJob,
     toggleRSVP,
+    activeMentorships,
   } = useStudentDashboard();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -163,7 +164,7 @@ const StudentDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm">Active Connections</p>
-                <p className="text-3xl font-bold text-primary mt-1">12</p>
+                <p className="text-3xl font-bold text-primary mt-1">{activeMentorships}</p>
               </div>
               <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
                 <TrendingUp className="text-primary" size={24} />
@@ -351,9 +352,14 @@ const StudentDashboard: React.FC = () => {
 
                     <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                       <p className="text-xs text-gray-500">Posted by {job.postedBy}</p>
-                      <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-secondary transition-colors">
+                      <a
+                        href={job.applyLink || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-secondary transition-colors inline-block"
+                      >
                         Apply Now
-                      </button>
+                      </a>
                     </div>
                   </motion.div>
                 ))}

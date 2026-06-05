@@ -4,7 +4,8 @@ from sqlalchemy import select, func, and_, or_
 from datetime import datetime, timedelta
 from app.db.session import get_db
 from app.models.user import User
-from app.models.mentorship import MentorshipRequest
+from app.models.mentorship import MentorshipRequest, MentorshipStatus
+from app.models.job import Job
 from app.core.auth import get_current_user
 from pydantic import BaseModel
 from typing import Optional
@@ -64,13 +65,12 @@ async def get_admin_stats(
     # Active mentorships (accepted status)
     active_mentorships_result = await db.execute(
         select(func.count(MentorshipRequest.id))
-        .where(MentorshipRequest.status == "accepted")
+        .where(MentorshipRequest.status == MentorshipStatus.ACCEPTED)
     )
     active_mentorships = active_mentorships_result.scalar() or 0
     
-    # Total jobs posted (this would need a Jobs table in production)
-    # For demo, returning 0
-    total_jobs_posted = 0
+    total_jobs_result = await db.execute(select(func.count(Job.id)))
+    total_jobs_posted = total_jobs_result.scalar() or 0
     
     # Users by department (from profiles)
     dept_counts = await db.execute(
@@ -160,6 +160,9 @@ async def verify_user(
     
     # Update verification status
     user.verification_status = verification.status
+    user.is_verified = verification.status == "verified"
+    if verification.status == "verified":
+        user.is_active = True
     
     await db.commit()
     await db.refresh(user)

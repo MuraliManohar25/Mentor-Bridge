@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, GraduationCap, AlertCircle, CheckCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { getDashboardPath } from '../components/ProtectedRoute';
 
 const Login: React.FC = () => {
+    const navigate = useNavigate();
+    const { login } = useAuth();
     const [formData, setFormData] = useState({ email: '', password: '', rememberMe: false, role: 'student' as 'student' | 'alumni' | 'admin' });
     const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string; role?: string }>({});
     const [loading, setLoading] = useState(false);
@@ -30,18 +34,25 @@ const Login: React.FC = () => {
         setErrors({});
         setLoading(true);
 
-        // Dummy login - just redirect based on role
-        setTimeout(() => {
-            // Navigate based on role
-            if (formData.role === 'student') {
-                window.location.href = '/student/dashboard';
-            } else if (formData.role === 'alumni') {
-                window.location.href = '/alumni/dashboard';
-            } else if (formData.role === 'admin') {
-                window.location.href = '/admin/dashboard';
-            }
+        if (!formData.email || !formData.password) {
+            setErrors({ general: 'Please enter your email and password.' });
             setLoading(false);
-        }, 500);
+            return;
+        }
+
+        try {
+            const user = await login(
+                formData.email,
+                formData.password,
+                formData.rememberMe,
+                formData.role
+            );
+            navigate(getDashboardPath(user.role));
+        } catch (error: any) {
+            setErrors({ general: error.message || 'Login failed. Please try again.' });
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

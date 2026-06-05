@@ -1,62 +1,61 @@
 /**
  * API Client with JWT Authentication
- * 
- * Axios instance configured with:
- * - Base URL pointing to backend
- * - Request interceptor: Auto-attach JWT from localStorage
- * - Response interceptor: Handle 401 errors (redirect to login)
  */
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-// Create axios instance
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+
 const apiClient = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
-    timeout: 10000,
+    baseURL: API_BASE,
+    timeout: 15000,
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-// Request Interceptor: Attach JWT token
 apiClient.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
         const token = localStorage.getItem('access_token');
-
         if (token && config.headers) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-
         return config;
     },
-    (error: AxiosError) => {
-        return Promise.reject(error);
-    }
+    (error: AxiosError) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle errors
 apiClient.interceptors.response.use(
     (response) => response,
-    (error: AxiosError) => {
-        // Handle 401 Unauthorized - redirect to login
-        if (error.response?.status === 401) {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            localStorage.removeItem('user');
+    async (error: AxiosError) => {
+        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+        const isAuthRoute =
+            originalRequest?.url?.includes('/auth/login') ||
+            originalRequest?.url?.includes('/auth/register');
 
-            // Redirect to login if not already there
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
+        if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isAuthRoute) {
+            originalRequest._retry = true;
+            try {
+                const response = await axios.post(
+                    `${API_BASE}/auth/refresh`,
+                    {},
+                    { withCredentials: true }
+                );
+                const { access_token } = response.data;
+                localStorage.setItem('access_token', access_token);
+                originalRequest.headers.Authorization = `Bearer ${access_token}`;
+                return apiClient(originalRequest);
+            } catch {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('user');
+                if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+                    window.location.href = '/login';
+                }
             }
         }
 
-        // Handle 403 Forbidden
         if (error.response?.status === 403) {
             console.error('Access forbidden:', error.response.data);
-        }
-
-        // Handle 500 Internal Server Error
-        if (error.response?.status === 500) {
-            console.error('Server error:', error.response.data);
         }
 
         return Promise.reject(error);
@@ -65,10 +64,11 @@ apiClient.interceptors.response.use(
 
 export default apiClient;
 
-// Error handling utility
 export const getErrorMessage = (error: unknown): string => {
     if (axios.isAxiosError(error)) {
-        return error.response?.data?.detail || error.message || 'An error occurred';
+        const detail = error.response?.data?.detail;
+        if (typeof detail === 'string') return detail;
+        return error.message || 'An error occurred';
     }
     return 'An unexpected error occurred';
 };

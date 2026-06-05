@@ -1,4 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { getAlumni, updateMentorStatus } from '../services/alumniService';
+import {
+  getMentorshipRequests,
+  updateRequestStatus,
+  MentorshipStatus,
+} from '../services/mentorshipService';
+import { getMyJobs, createJob, updateJobStatus } from '../services/jobService';
+import { useAuth } from '../context/AuthContext';
 
 export interface Mentee {
   id: string;
@@ -44,7 +52,44 @@ export interface AlumniStats {
   activeJobs: number;
 }
 
+const mapMentee = (req: any): Mentee => ({
+  id: req.id,
+  name: req.student_name || 'Student',
+  email: req.student_email || '',
+  department: req.student_department || 'N/A',
+  graduation_year: new Date().getFullYear(),
+  status: req.status === 'accepted' ? 'active' : 'pending',
+  requestMessage: req.message,
+  requestDate: req.created_at,
+});
+
+const mapJob = (job: any): Job => ({
+  id: job.id,
+  title: job.title,
+  company: job.company,
+  location: job.location,
+  type: job.job_type,
+  description: job.description,
+  requirements: job.requirements || [],
+  applyLink: job.apply_link,
+  postedDate: job.created_at,
+  applicationCount: 0,
+  status: job.status,
+});
+
+const mapPeer = (item: any): PeerAlumni => ({
+  id: item.id,
+  name: item.full_name,
+  email: item.email,
+  graduationYear: item.profile?.graduation_year || 0,
+  currentCompany: item.profile?.current_company || 'N/A',
+  currentPosition: item.profile?.current_position || 'N/A',
+  industry: item.profile?.department || 'General',
+  location: item.profile?.department || 'N/A',
+});
+
 export const useAlumniManagement = () => {
+  const { user } = useAuth();
   const [mentees, setMentees] = useState<Mentee[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [peerAlumni, setPeerAlumni] = useState<PeerAlumni[]>([]);
@@ -54,273 +99,120 @@ export const useAlumniManagement = () => {
     totalJobsPosted: 0,
     activeJobs: 0,
   });
-  const [isMentor, setIsMentor] = useState(true);
+  const [isMentor, setIsMentor] = useState(user?.profile?.is_mentor ?? false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Dummy data for presentation
-  const dummyMentees: Mentee[] = [
-    {
-      id: '1',
-      name: 'Alex Thompson',
-      email: 'alex.t@university.edu',
-      department: 'Computer Science',
-      graduation_year: 2026,
-      status: 'pending',
-      requestMessage: 'Hi! I\'m very interested in learning about software engineering at TechCorp. I\'d love to hear about your career journey and get guidance on preparing for technical interviews.',
-      requestDate: '2026-01-05',
-    },
-    {
-      id: '2',
-      name: 'Maya Patel',
-      email: 'maya.p@university.edu',
-      department: 'Computer Science',
-      graduation_year: 2027,
-      status: 'active',
-      requestDate: '2025-12-15',
-    },
-    {
-      id: '3',
-      name: 'James Wilson',
-      email: 'james.w@university.edu',
-      department: 'Data Science',
-      graduation_year: 2026,
-      status: 'pending',
-      requestMessage: 'I\'m looking to transition from data analysis to machine learning engineering. Your experience would be incredibly valuable to me.',
-      requestDate: '2026-01-04',
-    },
-    {
-      id: '4',
-      name: 'Sophie Chen',
-      email: 'sophie.c@university.edu',
-      department: 'Computer Science',
-      graduation_year: 2026,
-      status: 'active',
-      requestDate: '2025-12-20',
-    },
-  ];
+  const recalcStats = (menteeList: Mentee[], jobList: Job[]) => {
+    setStats({
+      activeMentees: menteeList.filter((m) => m.status === 'active').length,
+      pendingRequests: menteeList.filter((m) => m.status === 'pending').length,
+      totalJobsPosted: jobList.length,
+      activeJobs: jobList.filter((j) => j.status === 'active').length,
+    });
+  };
 
-  const dummyJobs: Job[] = [
-    {
-      id: '1',
-      title: 'Frontend Developer',
-      company: 'TechCorp',
-      location: 'San Francisco, CA',
-      type: 'full-time',
-      description: 'Join our team building next-generation web applications. We\'re looking for passionate developers with strong React skills.',
-      requirements: ['React', 'TypeScript', 'REST APIs', '3+ years experience'],
-      applyLink: 'https://techcorp.com/careers/frontend-dev',
-      postedDate: '2026-01-03',
-      applicationCount: 12,
-      status: 'active',
-    },
-    {
-      id: '2',
-      title: 'Software Engineering Intern',
-      company: 'TechCorp',
-      location: 'Remote',
-      type: 'internship',
-      description: 'Summer 2026 internship program for talented CS students. Work on real projects with mentorship.',
-      requirements: ['Python or JavaScript', 'Data Structures', 'Problem Solving'],
-      applyLink: 'https://techcorp.com/careers/intern',
-      postedDate: '2025-12-28',
-      applicationCount: 25,
-      status: 'active',
-    },
-    {
-      id: '3',
-      title: 'Senior Backend Engineer',
-      company: 'TechCorp',
-      location: 'San Francisco, CA',
-      type: 'full-time',
-      description: 'Lead backend architecture and mentor junior engineers.',
-      requirements: ['Python', 'PostgreSQL', 'AWS', '5+ years experience'],
-      applyLink: 'https://techcorp.com/careers/senior-backend',
-      postedDate: '2025-12-15',
-      applicationCount: 8,
-      status: 'closed',
-    },
-  ];
+  const fetchAlumniData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [requestsRes, jobsRes, peersRes] = await Promise.all([
+        getMentorshipRequests(),
+        getMyJobs(),
+        getAlumni({ limit: 50 }),
+      ]);
 
-  const dummyPeerAlumni: PeerAlumni[] = [
-    {
-      id: '1',
-      name: 'Michael Chen',
-      email: 'mchen@dataanalytics.com',
-      graduationYear: 2019,
-      currentCompany: 'DataAnalytics Inc',
-      currentPosition: 'Lead Data Scientist',
-      industry: 'Data Science',
-      location: 'New York, NY',
-      linkedIn: 'linkedin.com/in/michael-chen',
-    },
-    {
-      id: '2',
-      name: 'Emily Rodriguez',
-      email: 'emily.r@fintech.com',
-      graduationYear: 2020,
-      currentCompany: 'FinTech Solutions',
-      currentPosition: 'Senior Product Manager',
-      industry: 'Financial Technology',
-      location: 'Boston, MA',
-      linkedIn: 'linkedin.com/in/emily-rodriguez',
-    },
-    {
-      id: '3',
-      name: 'David Park',
-      email: 'dpark@cloudservices.com',
-      graduationYear: 2017,
-      currentCompany: 'Cloud Services Corp',
-      currentPosition: 'DevOps Engineer',
-      industry: 'Cloud Computing',
-      location: 'Seattle, WA',
-      linkedIn: 'linkedin.com/in/david-park',
-    },
-    {
-      id: '4',
-      name: 'Jennifer Lee',
-      email: 'jlee@designstudio.com',
-      graduationYear: 2019,
-      currentCompany: 'Design Studio',
-      currentPosition: 'Senior UX Designer',
-      industry: 'Design',
-      location: 'Austin, TX',
-      linkedIn: 'linkedin.com/in/jennifer-lee',
-    },
-    {
-      id: '5',
-      name: 'Robert Martinez',
-      email: 'rmartinez@securityfirm.com',
-      graduationYear: 2018,
-      currentCompany: 'SecureNet',
-      currentPosition: 'Security Engineer',
-      industry: 'Cybersecurity',
-      location: 'Washington, DC',
-      linkedIn: 'linkedin.com/in/robert-martinez',
-    },
-  ];
+      const menteeList = requestsRes
+        .filter((r) => r.status !== MentorshipStatus.REJECTED)
+        .map(mapMentee);
+      const jobList = jobsRes.map(mapJob);
+      const peers = peersRes.results
+        .filter((p) => p.id !== user?.id)
+        .map(mapPeer);
+
+      setMentees(menteeList);
+      setJobs(jobList);
+      setPeerAlumni(peers);
+      recalcStats(menteeList, jobList);
+      setIsMentor(user?.profile?.is_mentor ?? false);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch alumni data');
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, user?.profile?.is_mentor]);
 
   useEffect(() => {
     fetchAlumniData();
-  }, []);
+  }, [fetchAlumniData]);
 
-  const fetchAlumniData = async () => {
-    setLoading(true);
+  const handleMentorshipRequest = async (requestId: string, action: 'accept' | 'decline') => {
     try {
-      // Demo mode: Use dummy data
-      // In production, uncomment:
-      // const [menteesRes, jobsRes, peersRes] = await Promise.all([
-      //   apiClient.get('/mentorship/mentees'),
-      //   apiClient.get('/jobs/my-jobs'),
-      //   apiClient.get('/alumni/peers'),
-      // ]);
-      
-      setTimeout(() => {
-        setMentees(dummyMentees);
-        setJobs(dummyJobs);
-        setPeerAlumni(dummyPeerAlumni);
-        
-        // Calculate stats
-        const activeMentees = dummyMentees.filter(m => m.status === 'active').length;
-        const pendingRequests = dummyMentees.filter(m => m.status === 'pending').length;
-        const activeJobs = dummyJobs.filter(j => j.status === 'active').length;
-        
-        setStats({
-          activeMentees,
-          pendingRequests,
-          totalJobsPosted: dummyJobs.length,
-          activeJobs,
-        });
-        
-        setLoading(false);
-      }, 800);
+      if (action === 'accept') {
+        await updateRequestStatus(requestId, MentorshipStatus.ACCEPTED);
+      } else {
+        await updateRequestStatus(requestId, MentorshipStatus.REJECTED);
+      }
+      await fetchAlumniData();
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch alumni data');
-      setLoading(false);
+      setError(err.message);
     }
   };
 
-  const handleMentorshipRequest = async (requestId: string, action: 'accept' | 'decline') => {
-    // Demo mode: Update locally
-    setMentees(prevMentees => 
-      prevMentees.map(mentee => 
-        mentee.id === requestId 
-          ? { ...mentee, status: (action === 'accept' ? 'active' : 'pending') as 'active' | 'pending' }
-          : mentee
-      ).filter(mentee => !(mentee.id === requestId && action === 'decline'))
-    );
-
-    // Update stats
-    setStats(prev => ({
-      ...prev,
-      activeMentees: action === 'accept' ? prev.activeMentees + 1 : prev.activeMentees,
-      pendingRequests: prev.pendingRequests - 1,
-    }));
-
-    // Production mode:
-    // await apiClient.patch(`/mentorship-requests/${requestId}`, { status: action === 'accept' ? 'accepted' : 'declined' });
-    // fetchAlumniData();
+  const createJobPost = async (
+    jobData: Omit<Job, 'id' | 'postedDate' | 'applicationCount' | 'status'>
+  ) => {
+    try {
+      await createJob({
+        title: jobData.title,
+        company: jobData.company,
+        location: jobData.location,
+        job_type: jobData.type,
+        description: jobData.description,
+        requirements: jobData.requirements,
+        apply_link: jobData.applyLink,
+      });
+      await fetchAlumniData();
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
   };
 
-  const createJob = async (jobData: Omit<Job, 'id' | 'postedDate' | 'applicationCount' | 'status'>) => {
-    const newJob: Job = {
-      ...jobData,
-      id: Date.now().toString(),
-      postedDate: new Date().toISOString().split('T')[0],
-      applicationCount: 0,
-      status: 'active',
-    };
-
-    setJobs(prev => [newJob, ...prev]);
-    setStats(prev => ({
-      ...prev,
-      totalJobsPosted: prev.totalJobsPosted + 1,
-      activeJobs: prev.activeJobs + 1,
-    }));
-
-    // Production mode:
-    // await apiClient.post('/jobs', jobData);
-    // fetchAlumniData();
-  };
-
-  const toggleJobStatus = (jobId: string) => {
-    setJobs(prev => 
-      prev.map(job => 
-        job.id === jobId 
-          ? { ...job, status: job.status === 'active' ? 'closed' : 'active' }
-          : job
-      )
-    );
-
-    // Production mode:
-    // await apiClient.patch(`/jobs/${jobId}/status`);
+  const toggleJobStatus = async (jobId: string) => {
+    const job = jobs.find((j) => j.id === jobId);
+    if (!job) return;
+    const newStatus = job.status === 'active' ? 'closed' : 'active';
+    try {
+      await updateJobStatus(jobId, newStatus);
+      await fetchAlumniData();
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
   const toggleMentorStatus = async () => {
-    setIsMentor(!isMentor);
-    
-    // Production mode:
-    // await apiClient.patch('/alumni/status', { is_mentor: !isMentor });
+    const newStatus = !isMentor;
+    try {
+      await updateMentorStatus(newStatus);
+      setIsMentor(newStatus);
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
-  const searchPeers = (query: string) => {
-    if (!query.trim()) {
-      setPeerAlumni(dummyPeerAlumni);
-      return;
+  const searchPeers = async (query: string) => {
+    try {
+      const response = await getAlumni({
+        search: query.trim() || undefined,
+        limit: 50,
+      });
+      setPeerAlumni(
+        response.results.filter((p) => p.id !== user?.id).map(mapPeer)
+      );
+    } catch (err: any) {
+      setError(err.message);
     }
-
-    const filtered = dummyPeerAlumni.filter(peer =>
-      peer.name.toLowerCase().includes(query.toLowerCase()) ||
-      peer.industry.toLowerCase().includes(query.toLowerCase()) ||
-      peer.currentCompany.toLowerCase().includes(query.toLowerCase()) ||
-      peer.graduationYear.toString().includes(query)
-    );
-
-    setPeerAlumni(filtered);
-
-    // Production mode:
-    // const response = await apiClient.get(`/alumni/peers?search=${query}`);
-    // setPeerAlumni(response.data);
   };
 
   return {
@@ -332,7 +224,7 @@ export const useAlumniManagement = () => {
     loading,
     error,
     handleMentorshipRequest,
-    createJob,
+    createJob: createJobPost,
     toggleJobStatus,
     toggleMentorStatus,
     searchPeers,

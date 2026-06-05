@@ -1,4 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  getAdminStats,
+  getAdminUsers,
+  verifyUser as verifyUserApi,
+  deactivateUser as deactivateUserApi,
+  deleteUser as deleteUserApi,
+} from '../services/adminService';
+import { getOverseasJobs, createOverseasJob } from '../services/jobService';
+import { getEvents, updateEventStatus } from '../services/eventService';
+import { getAnnouncements, createAnnouncement } from '../services/announcementService';
 
 export interface AdminStats {
   totalUsers: number;
@@ -54,6 +64,60 @@ export interface EventForApproval {
   status: 'pending' | 'approved' | 'rejected';
 }
 
+const mapStats = (data: any): AdminStats => ({
+  totalUsers: data.total_users,
+  usersByRole: {
+    admin: data.users_by_role?.admin || 0,
+    alumni: data.users_by_role?.alumni || 0,
+    student: data.users_by_role?.student || 0,
+  },
+  newSignups30Days: data.new_signups_30_days,
+  activeMentorships: data.active_mentorships,
+  totalJobsPosted: data.total_jobs_posted,
+  usersByDepartment: data.users_by_department || {},
+});
+
+const mapUser = (user: any): UserData => ({
+  id: user.id,
+  full_name: user.full_name,
+  email: user.email,
+  role: user.role,
+  department: user.department || 'N/A',
+  verification_status: user.verification_status,
+  is_active: user.is_active,
+  created_at: user.created_at || '',
+});
+
+const mapOverseasJob = (job: any): OverseasJob => ({
+  id: job.id,
+  title: job.title,
+  company: job.company,
+  country: job.country || job.location,
+  description: job.description,
+  requirements: job.requirements || [],
+  salary_range: job.salary_range || 'N/A',
+  status: job.status,
+  is_official: true,
+});
+
+const mapEvent = (event: any): EventForApproval => ({
+  id: event.id,
+  title: event.title,
+  organizer: event.organizer_name || 'Unknown',
+  date: event.event_date,
+  attendees: event.attendees,
+  status: event.status,
+});
+
+const mapAnnouncement = (item: any): Announcement => ({
+  id: item.id,
+  title: item.title,
+  content: item.content,
+  type: item.priority === 'high' ? 'warning' : item.priority === 'low' ? 'success' : 'info',
+  created_at: item.created_at,
+  created_by: item.created_by_name || 'Admin',
+});
+
 export const useAdminDashboard = () => {
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
@@ -63,7 +127,6 @@ export const useAdminDashboard = () => {
     totalJobsPosted: 0,
     usersByDepartment: {},
   });
-  
   const [users, setUsers] = useState<UserData[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [overseasJobs, setOverseasJobs] = useState<OverseasJob[]>([]);
@@ -71,278 +134,120 @@ export const useAdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Dummy data for demo
-  const dummyStats: AdminStats = {
-    totalUsers: 1234,
-    usersByRole: {
-      admin: 5,
-      alumni: 456,
-      student: 773,
-    },
-    newSignups30Days: 89,
-    activeMentorships: 127,
-    totalJobsPosted: 342,
-    usersByDepartment: {
-      'Computer Science': 412,
-      'Business': 287,
-      'Engineering': 234,
-      'Design': 156,
-      'Data Science': 145,
-    },
-  };
+  const fetchAdminData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [statsRes, usersRes, announcementsRes, jobsRes, eventsRes] = await Promise.all([
+        getAdminStats(),
+        getAdminUsers(),
+        getAnnouncements(),
+        getOverseasJobs(),
+        getEvents(true),
+      ]);
 
-  const dummyUsers: UserData[] = [
-    {
-      id: '1',
-      full_name: 'Sarah Johnson',
-      email: 'sarah.j@example.com',
-      role: 'alumni',
-      department: 'Computer Science',
-      verification_status: 'pending',
-      is_active: true,
-      created_at: '2026-01-05',
-    },
-    {
-      id: '2',
-      full_name: 'Michael Chen',
-      email: 'michael.c@example.com',
-      role: 'student',
-      department: 'Business',
-      verification_status: 'verified',
-      is_active: true,
-      created_at: '2026-01-04',
-    },
-    {
-      id: '3',
-      full_name: 'Emily Rodriguez',
-      email: 'emily.r@example.com',
-      role: 'alumni',
-      department: 'Engineering',
-      verification_status: 'pending',
-      is_active: true,
-      created_at: '2026-01-03',
-    },
-    {
-      id: '4',
-      full_name: 'David Kim',
-      email: 'david.k@example.com',
-      role: 'student',
-      department: 'Design',
-      verification_status: 'verified',
-      is_active: true,
-      created_at: '2026-01-02',
-    },
-    {
-      id: '5',
-      full_name: 'Lisa Anderson',
-      email: 'lisa.a@example.com',
-      role: 'alumni',
-      department: 'Mathematics',
-      verification_status: 'rejected',
-      is_active: false,
-      created_at: '2025-12-30',
-    },
-  ];
-
-  const dummyAnnouncements: Announcement[] = [
-    {
-      id: '1',
-      title: 'System Maintenance Scheduled',
-      content: 'The platform will undergo maintenance on January 10th from 2-4 AM EST.',
-      type: 'warning',
-      created_at: '2026-01-05',
-      created_by: 'Admin',
-    },
-    {
-      id: '2',
-      title: 'New Features Released',
-      content: 'Check out our new mentorship matching algorithm and improved job board!',
-      type: 'success',
-      created_at: '2026-01-03',
-      created_by: 'Admin',
-    },
-  ];
-
-  const dummyOverseasJobs: OverseasJob[] = [
-    {
-      id: '1',
-      title: 'Senior Software Engineer',
-      company: 'Tech Global Inc',
-      country: 'Germany',
-      description: 'Join our Berlin office to work on cutting-edge AI projects.',
-      requirements: ['5+ years experience', 'Python', 'TensorFlow', 'German (B1)'],
-      salary_range: '€80,000 - €120,000',
-      status: 'active',
-      is_official: true,
-    },
-    {
-      id: '2',
-      title: 'Product Manager',
-      company: 'Innovation Labs',
-      country: 'Singapore',
-      description: 'Lead product development for our APAC expansion.',
-      requirements: ['3+ years PM experience', 'Agile', 'Data-driven'],
-      salary_range: 'SGD 100,000 - 150,000',
-      status: 'active',
-      is_official: true,
-    },
-  ];
-
-  const dummyEvents: EventForApproval[] = [
-    {
-      id: '1',
-      title: 'Tech Career Fair 2026',
-      organizer: 'Alumni Association',
-      date: '2026-01-25',
-      attendees: 200,
-      status: 'pending',
-    },
-    {
-      id: '2',
-      title: 'Networking Mixer',
-      organizer: 'Sarah Johnson',
-      date: '2026-02-05',
-      attendees: 50,
-      status: 'pending',
-    },
-  ];
+      setStats(mapStats(statsRes));
+      setUsers(usersRes.map(mapUser));
+      setAnnouncements(announcementsRes.map(mapAnnouncement));
+      setOverseasJobs(jobsRes.map(mapOverseasJob));
+      setEvents(eventsRes.map(mapEvent));
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch admin data');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchAdminData();
-  }, []);
-
-  const fetchAdminData = async () => {
-    setLoading(true);
-    try {
-      // Demo mode: Use dummy data
-      // In production:
-      // const response = await apiClient.get('/admin/stats');
-      // setStats(response.data);
-      
-      setTimeout(() => {
-        setStats(dummyStats);
-        setUsers(dummyUsers);
-        setAnnouncements(dummyAnnouncements);
-        setOverseasJobs(dummyOverseasJobs);
-        setEvents(dummyEvents);
-        setLoading(false);
-      }, 800);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch admin data');
-      setLoading(false);
-    }
-  };
+  }, [fetchAdminData]);
 
   const verifyUser = async (userId: string, status: 'verified' | 'rejected') => {
-    // Demo mode: Update locally
-    setUsers(prevUsers =>
-      prevUsers.map(user =>
-        user.id === userId
-          ? { ...user, verification_status: status, is_active: status === 'verified' }
-          : user
-      )
-    );
-
-    // Update stats
-    setStats(prev => ({
-      ...prev,
-      usersByRole: {
-        ...prev.usersByRole,
-      },
-    }));
-
-    // Production:
-    // await apiClient.patch(`/admin/verify-user/${userId}`, { status });
-    // fetchAdminData();
+    try {
+      await verifyUserApi(userId, status);
+      await fetchAdminData();
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
   const deactivateUser = async (userId: string) => {
-    // Demo mode: Update locally
-    setUsers(prevUsers =>
-      prevUsers.map(user =>
-        user.id === userId ? { ...user, is_active: !user.is_active } : user
-      )
-    );
-
-    // Production:
-    // await apiClient.patch(`/admin/deactivate-user/${userId}`, { is_active: false });
+    const user = users.find((u) => u.id === userId);
+    if (!user) return;
+    try {
+      await deactivateUserApi(userId, !user.is_active);
+      await fetchAdminData();
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
   const deleteUser = async (userId: string) => {
-    // Demo mode: Remove from list
-    setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
-    
-    // Update stats
-    setStats(prev => ({
-      ...prev,
-      totalUsers: prev.totalUsers - 1,
-    }));
-
-    // Production:
-    // await apiClient.delete(`/admin/delete-user/${userId}`);
-  };
-
-  const searchUsers = (query: string) => {
-    if (!query.trim()) {
-      setUsers(dummyUsers);
-      return;
+    try {
+      await deleteUserApi(userId);
+      await fetchAdminData();
+    } catch (err: any) {
+      setError(err.message);
     }
-
-    const filtered = dummyUsers.filter(
-      user =>
-        user.full_name.toLowerCase().includes(query.toLowerCase()) ||
-        user.email.toLowerCase().includes(query.toLowerCase())
-    );
-
-    setUsers(filtered);
   };
 
-  const filterByVerificationStatus = (status: string) => {
-    if (status === 'all') {
-      setUsers(dummyUsers);
-      return;
+  const searchUsers = async (query: string) => {
+    try {
+      const results = await getAdminUsers(query);
+      setUsers(results.map(mapUser));
+    } catch (err: any) {
+      setError(err.message);
     }
-
-    const filtered = dummyUsers.filter(user => user.verification_status === status);
-    setUsers(filtered);
   };
 
-  const createAnnouncement = async (announcement: Omit<Announcement, 'id' | 'created_at' | 'created_by'>) => {
-    const newAnnouncement: Announcement = {
-      ...announcement,
-      id: Date.now().toString(),
-      created_at: new Date().toISOString().split('T')[0],
-      created_by: 'Admin',
-    };
-
-    setAnnouncements(prev => [newAnnouncement, ...prev]);
-
-    // Production:
-    // await apiClient.post('/admin/announcements', announcement);
+  const filterByVerificationStatus = async (status: string) => {
+    try {
+      const results = await getAdminUsers(undefined, status);
+      setUsers(results.map(mapUser));
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
-  const createOverseasJob = async (job: Omit<OverseasJob, 'id' | 'is_official'>) => {
-    const newJob: OverseasJob = {
-      ...job,
-      id: Date.now().toString(),
-      is_official: true,
-    };
+  const createAnnouncementPost = async (
+    announcement: Omit<Announcement, 'id' | 'created_at' | 'created_by'>
+  ) => {
+    try {
+      await createAnnouncement({
+        title: announcement.title,
+        content: announcement.content,
+        type: announcement.type,
+      });
+      await fetchAdminData();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
 
-    setOverseasJobs(prev => [newJob, ...prev]);
-
-    // Production:
-    // await apiClient.post('/admin/overseas-jobs', job);
+  const createOverseasJobPost = async (job: Omit<OverseasJob, 'id' | 'is_official'>) => {
+    try {
+      await createOverseasJob({
+        title: job.title,
+        company: job.company,
+        country: job.country,
+        description: job.description,
+        requirements: job.requirements,
+        salary_range: job.salary_range,
+        status: job.status,
+      });
+      await fetchAdminData();
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
   const approveEvent = async (eventId: string, status: 'approved' | 'rejected') => {
-    setEvents(prevEvents =>
-      prevEvents.map(event =>
-        event.id === eventId ? { ...event, status } : event
-      )
-    );
-
-    // Production:
-    // await apiClient.patch(`/admin/events/${eventId}`, { status });
+    try {
+      await updateEventStatus(eventId, status);
+      await fetchAdminData();
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
   return {
@@ -358,8 +263,8 @@ export const useAdminDashboard = () => {
     deleteUser,
     searchUsers,
     filterByVerificationStatus,
-    createAnnouncement,
-    createOverseasJob,
+    createAnnouncement: createAnnouncementPost,
+    createOverseasJob: createOverseasJobPost,
     approveEvent,
     refetch: fetchAdminData,
   };

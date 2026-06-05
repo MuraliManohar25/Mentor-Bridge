@@ -6,7 +6,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from app.db.session import get_db
-from app.models.user import User, Profile
+from app.models.user import User, Profile, UserRole
 from app.schemas.user import (
     UserCreate,
     UserOut,
@@ -93,9 +93,9 @@ async def register(
         user_id=new_user.id,
         bio=None,
         avatar_url=None,
-        graduation_year=user_data.graduation_year,  # Store graduation year if provided
-        department=user_data.department,  # Store department if provided
-        is_mentor=False,
+        graduation_year=user_data.graduation_year,
+        department=user_data.department,
+        is_mentor=user_data.role == UserRole.ALUMNI,
         mentorship_expertise=[],
         interests=[]
     )
