@@ -6,10 +6,10 @@
   /* Mentor Bridge Color Palette */
   --color-primary: #3F9AAE;
   --color-secondary: #79C9C5;
-  --color-accent: #F96E5B;
-  --color-warm: #FFE2AF;
-  --color-off-white: #FFF7E8;
-  --color-light-gray: #FFE2AF;
+  --color-accent: #2A7F92;
+  --color-warm: #E2E8F0;
+  --color-off-white: #F8FAFC;
+  --color-light-gray: #E2E8F0;
   --color-text-dark: #243943;
 
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -50,6 +50,6 @@ body {
 @media (prefers-color-scheme: light) {
   :root {
     color: #243943;
-    background-color: #FFF7E8;
+    background-color: #F8FAFC;
   }
 }
