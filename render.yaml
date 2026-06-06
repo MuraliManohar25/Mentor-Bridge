@@ -36,11 +36,10 @@ services:
           name: mentor-bridge-web
           envVarKey: RENDER_EXTERNAL_URL
 
-  # React frontend (static site)
+  # React frontend (static site — no plan field; static sites are always free)
   - type: web
     name: mentor-bridge-web
     runtime: static
-    plan: free
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
