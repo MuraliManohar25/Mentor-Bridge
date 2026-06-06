@@ -30,12 +30,30 @@ class Settings(BaseSettings):
     @property
     def cors_origins_list(self) -> List[str]:
         """Parse CORS origins from comma-separated string."""
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        origins: List[str] = []
+        for origin in self.CORS_ORIGINS.split(","):
+            origin = origin.strip()
+            if not origin:
+                continue
+            if not origin.startswith(("http://", "https://")):
+                origin = f"https://{origin}"
+            origins.append(origin)
+        return origins
+
+    @property
+    def resolved_database_url(self) -> str:
+        """Normalize database URLs for async SQLAlchemy (e.g. Render/Heroku postgres://)."""
+        url = self.DATABASE_URL
+        if url.startswith("postgres://"):
+            return url.replace("postgres://", "postgresql+asyncpg://", 1)
+        if url.startswith("postgresql://") and "+asyncpg" not in url:
+            return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return url
 
     @property
     def is_sqlite(self) -> bool:
         """Return True when the configured database URL points to SQLite."""
-        return self.DATABASE_URL.startswith("sqlite")
+        return self.resolved_database_url.startswith("sqlite")
 
     def validate_production_settings(self) -> None:
         """Fail fast when unsafe development settings are used in production."""

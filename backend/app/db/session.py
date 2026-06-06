@@ -5,7 +5,7 @@ from typing import AsyncGenerator
 connect_args = {"check_same_thread": False} if settings.is_sqlite else {}
 
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    settings.resolved_database_url,
     echo=settings.DEBUG,
     future=True,
     connect_args=connect_args,

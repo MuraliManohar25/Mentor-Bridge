@@ -3,7 +3,13 @@
  */
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const resolveApiBase = (): string => {
+    const raw = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const trimmed = raw.replace(/\/$/, '');
+    return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+};
+
+const API_BASE = resolveApiBase();
 
 const apiClient = axios.create({
     baseURL: API_BASE,
