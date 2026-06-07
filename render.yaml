@@ -1,11 +1,5 @@
 # Render Blueprint: https://render.com/docs/blueprint-spec
-# Deploy via Dashboard → New → Blueprint → connect this GitHub repo
-
-databases:
-  - name: mentor-bridge-db
-    plan: free
-    databaseName: mentor_bridge_db
-    user: mentor_bridge
+# Database: Supabase Postgres (set DATABASE_URL in mentor-bridge-api Environment)
 
 services:
   # FastAPI backend
@@ -21,9 +15,7 @@ services:
       - key: PYTHON_VERSION
         value: "3.11.0"
       - key: DATABASE_URL
-        fromDatabase:
-          name: mentor-bridge-db
-          property: connectionString
+        sync: false
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG

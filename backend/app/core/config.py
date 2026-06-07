@@ -1,5 +1,7 @@
+import ssl
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
+from typing import Dict, List, Any
 
 
 class Settings(BaseSettings):
@@ -54,6 +56,16 @@ class Settings(BaseSettings):
     def is_sqlite(self) -> bool:
         """Return True when the configured database URL points to SQLite."""
         return self.resolved_database_url.startswith("sqlite")
+
+    @property
+    def database_connect_args(self) -> Dict[str, Any]:
+        """Driver connect args (SQLite thread check, TLS for remote Postgres e.g. Supabase)."""
+        if self.is_sqlite:
+            return {"check_same_thread": False}
+        url = self.resolved_database_url.lower()
+        if "localhost" in url or "127.0.0.1" in url:
+            return {}
+        return {"ssl": ssl.create_default_context()}
 
     def validate_production_settings(self) -> None:
         """Fail fast when unsafe development settings are used in production."""

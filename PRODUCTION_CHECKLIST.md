@@ -2,6 +2,32 @@
 
 Use this checklist to move from demo mode to a real deployment.
 
+## Supabase database setup
+
+1. Go to [supabase.com](https://supabase.com) → **New project** (pick a region close to your Render API).
+2. Open **Project Settings → Database**.
+3. Under **Connection string**, choose **URI** and **Session pooler** (port **5432**).
+4. Copy the URI and replace `[YOUR-PASSWORD]` with your database password.
+5. Ensure the URL uses the async driver prefix:
+   - If it starts with `postgresql://`, the app auto-converts it to `postgresql+asyncpg://`.
+6. Run migrations once (from your machine or let Render build do it):
+
+```bash
+cd backend
+# paste your Supabase URI into .env as DATABASE_URL, then:
+alembic upgrade head
+```
+
+7. In **Render Dashboard → mentor-bridge-api → Environment**, set:
+
+```env
+DATABASE_URL=postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres
+```
+
+8. **Save** and trigger a **Manual Deploy** on the API service.
+
+Tables created by migrations: `users`, `profiles`, `mentorship_requests`, `jobs`, `events`, `announcements`, and related indexes.
+
 ## Required environment
 
 Backend:
@@ -10,18 +36,18 @@ Backend:
 APP_NAME=Mentor Bridge
 DEBUG=False
 AUTO_CREATE_TABLES=False
-DATABASE_URL=postgresql+asyncpg://USER:PASSWORD@HOST:5432/DB_NAME
+DATABASE_URL=postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres
 SECRET_KEY=replace-with-a-long-random-secret
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
-CORS_ORIGINS=https://your-frontend-domain.com
+CORS_ORIGINS=https://your-frontend-domain.onrender.com
 ```
 
-Frontend:
+Frontend (set in Render static site env or `frontend/.env` for local builds):
 
 ```env
-VITE_API_URL=https://your-backend-domain.com/api
-VITE_WS_URL=your-backend-domain.com
+VITE_API_URL=https://your-backend-domain.onrender.com/api
+VITE_WS_URL=your-backend-domain.onrender.com
 ```
 
 ## Local PostgreSQL stack

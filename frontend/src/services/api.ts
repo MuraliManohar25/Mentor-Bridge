@@ -13,7 +13,8 @@ const API_BASE = resolveApiBase();
 
 const apiClient = axios.create({
     baseURL: API_BASE,
-    timeout: 15000,
+    // Render free tier cold starts can exceed 15s on first request
+    timeout: 60000,
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
