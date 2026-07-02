@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
+import asyncio
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,9 +12,6 @@ import uuid
 from app.core.config import settings
 from app.db.session import get_db
 from app.models.user import User
-
-# Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 scheme for token extraction
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -30,7 +28,10 @@ def get_password_hash(password: str) -> str:
     Returns:
         Hashed password string
     """
-    return pwd_context.hash(password)
+    pwd_bytes = password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(pwd_bytes, salt)
+    return hashed.decode('utf-8')
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -44,7 +45,22 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         True if password matches, False otherwise
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    pwd_bytes = plain_password.encode('utf-8')
+    try:
+        hashed_bytes = hashed_password.encode('utf-8')
+        return bcrypt.checkpw(pwd_bytes, hashed_bytes)
+    except Exception:
+        return False
+
+
+async def get_password_hash_async(password: str) -> str:
+    """Hash password in a separate worker thread to avoid blocking the event loop."""
+    return await asyncio.to_thread(get_password_hash, password)
+
+
+async def verify_password_async(plain_password: str, hashed_password: str) -> bool:
+    """Verify password in a separate worker thread to avoid blocking the event loop."""
+    return await asyncio.to_thread(verify_password, plain_password, hashed_password)
 
 
 def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:

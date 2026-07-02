@@ -21,6 +21,8 @@ const LandingPage: React.FC = () => {
     useEffect(() => {
         if (isMobile) return;
 
+        let animationFrameId: number;
+
         const handleMouseMove = (e: MouseEvent) => {
             cursorPosRef.current = { x: e.clientX, y: e.clientY };
         };
@@ -41,11 +43,16 @@ const LandingPage: React.FC = () => {
                 yPercent: -50,
             });
 
-            requestAnimationFrame(animateReveal);
+            animationFrameId = requestAnimationFrame(animateReveal);
         };
 
         animateReveal();
-        return () => window.removeEventListener('mousemove', handleMouseMove);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        };
     }, [isMobile]);
 
     return (

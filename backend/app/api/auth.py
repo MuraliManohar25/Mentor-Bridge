@@ -16,8 +16,8 @@ from app.schemas.user import (
     Token
 )
 from app.core.auth import (
-    get_password_hash,
-    verify_password,
+    get_password_hash_async,
+    verify_password_async,
     create_access_token,
     create_refresh_token,
     get_current_user,
@@ -32,7 +32,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/register", response_model=LoginResponse, status_code=status.HTTP_201_CREATED)
-@limiter.limit("5/minute")
+@limiter.limit("30/minute")
 async def register(
     request: Request,
     response: Response,
@@ -73,7 +73,7 @@ async def register(
         )
     
     # Create new user
-    hashed_password = get_password_hash(user_data.password)
+    hashed_password = await get_password_hash_async(user_data.password)
     
     new_user = User(
         email=user_data.email,
@@ -136,7 +136,7 @@ async def register(
 
 
 @router.post("/login", response_model=LoginResponse)
-@limiter.limit("5/minute")
+@limiter.limit("30/minute")
 async def login(
     request: Request,
     response: Response,
@@ -172,7 +172,7 @@ async def login(
     user = result.scalar_one_or_none()
     
     # Verify user exists and password is correct - Generic error for anti-enumeration
-    if not user or not verify_password(credentials.password, user.hashed_password):
+    if not user or not await verify_password_async(credentials.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",

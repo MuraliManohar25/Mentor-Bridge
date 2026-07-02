@@ -65,7 +65,12 @@ class Settings(BaseSettings):
         url = self.resolved_database_url.lower()
         if "localhost" in url or "127.0.0.1" in url:
             return {}
-        return {"ssl": ssl.create_default_context()}
+        
+        # Configure SSL context to allow self-signed certificates for remote PostgreSQL (e.g. Render, Supabase)
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        return {"ssl": ctx}
 
     def validate_production_settings(self) -> None:
         """Fail fast when unsafe development settings are used in production."""

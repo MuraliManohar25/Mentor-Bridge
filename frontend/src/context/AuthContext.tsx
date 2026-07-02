@@ -113,8 +113,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const { access_token, user: userData } = response.data;
             persistSession(access_token, userData, rememberMe);
             return userData;
-        } catch {
-            throw new Error('Invalid email or password. Please try again.');
+        } catch (error) {
+            throw new Error(getErrorMessage(error) || 'Invalid email or password. Please try again.');
         }
     };
 
