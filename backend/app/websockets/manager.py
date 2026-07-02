@@ -100,6 +100,13 @@ class ConnectionManager:
         for conn, user_id in disconnected:
             self.disconnect(conn, user_id)
     
+    async def send_to_user(self, user_id: UUID, message: dict) -> None:
+        """
+        Alias for send_personal_message, matching the (user_id, message)
+        argument order used by the meeting and mentorship routers.
+        """
+        await self.send_personal_message(message, user_id)
+    
     def get_user_connection_count(self, user_id: UUID) -> int:
         """Get the number of active connections for a user."""
         return len(self.active_connections.get(user_id, []))

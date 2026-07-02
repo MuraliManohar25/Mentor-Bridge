@@ -73,8 +73,24 @@ export default apiClient;
 
 export const getErrorMessage = (error: unknown): string => {
     if (axios.isAxiosError(error)) {
-        const detail = error.response?.data?.detail;
+        const data = error.response?.data;
+        
+        // Handle FastAPI 422 validation errors (errors array format)
+        if (Array.isArray(data?.errors)) {
+            const firstError = data.errors[0];
+            if (firstError?.loc && firstError?.msg) {
+                const field = firstError.loc[firstError.loc.length - 1]; // Get the last element (field name)
+                return `${field}: ${firstError.msg}`;
+            }
+            if (firstError?.msg) {
+                return firstError.msg;
+            }
+        }
+        
+        // Handle string detail (400/403/404 etc.)
+        const detail = data?.detail;
         if (typeof detail === 'string') return detail;
+        
         return error.message || 'An error occurred';
     }
     return 'An unexpected error occurred';
