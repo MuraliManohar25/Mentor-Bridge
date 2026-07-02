@@ -19,6 +19,10 @@ const MentorModal: React.FC<MentorModalProps> = ({ isOpen, onClose, alumni }) =>
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || !alumni) return;
+    if (message.trim().length < 10) {
+      setError('Message must be at least 10 characters long');
+      return;
+    }
 
     setLoading(true);
     setError(null);
