@@ -34,6 +34,10 @@ const MeetingModal: React.FC<MeetingModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !scheduledAt) return;
+    if (title.trim().length < 5) {
+      setError('Title must be at least 5 characters long');
+      return;
+    }
 
     setLoading(true);
     setError(null);
