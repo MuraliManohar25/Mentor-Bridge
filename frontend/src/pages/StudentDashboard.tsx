@@ -10,10 +10,11 @@ import { useStudentDashboard, Alumni } from '../hooks/useStudentDashboard';
 import { useDebounce } from '../hooks/useDebounce';
 import { useAuth } from '../context/AuthContext';
 import MentorModal from '../components/MentorModal';
+import MeetingModal from '../components/MeetingModal';
 
 const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const {
     alumni,
     jobs,
@@ -29,6 +30,8 @@ const StudentDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAlumni, setSelectedAlumni] = useState<Alumni | null>(null);
   const [showMentorModal, setShowMentorModal] = useState(false);
+  const [showMeetingModal, setShowMeetingModal] = useState(false);
+  const [selectedAlumniForMeeting, setSelectedAlumniForMeeting] = useState<Alumni | null>(null);
   const [activeJobTab, setActiveJobTab] = useState<'all' | 'internal' | 'external'>('all');
 
   const handleLogout = () => {
@@ -46,6 +49,11 @@ const StudentDashboard: React.FC = () => {
   const handleMentorRequest = (alum: Alumni) => {
     setSelectedAlumni(alum);
     setShowMentorModal(true);
+  };
+
+  const handleScheduleMeeting = (alum: Alumni) => {
+    setSelectedAlumniForMeeting(alum);
+    setShowMeetingModal(true);
   };
 
   const filteredJobs = activeJobTab === 'all' 
@@ -177,6 +185,26 @@ const StudentDashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Alumni & Jobs */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Active Mentorships Section */}
+            {activeMentorships > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <Users className="text-primary" size={24} />
+                    Active Mentorships
+                  </h2>
+                </div>
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+                  <p className="text-green-800 text-sm">
+                    You have {activeMentorships} active mentorship{activeMentorships !== 1 ? 's' : ''}. Schedule meetings with your mentors below.
+                  </p>
+                </div>
+              </motion.div>
+            )}
             {/* Alumni Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -251,6 +279,13 @@ const StudentDashboard: React.FC = () => {
                           >
                             <UserPlus size={16} />
                             Request Mentorship
+                          </button>
+                          <button
+                            onClick={() => handleScheduleMeeting(alum)}
+                            className="mt-2 w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                          >
+                            <Calendar size={16} />
+                            Schedule Meeting
                           </button>
                         </div>
                       </div>
@@ -465,6 +500,21 @@ const StudentDashboard: React.FC = () => {
         onClose={() => setShowMentorModal(false)}
         alumni={selectedAlumni}
       />
+
+      {/* Meeting Modal */}
+      {selectedAlumniForMeeting && user && (
+        <MeetingModal
+          isOpen={showMeetingModal}
+          onClose={() => {
+            setShowMeetingModal(false);
+            setSelectedAlumniForMeeting(null);
+          }}
+          studentId={user.id}
+          alumniId={selectedAlumniForMeeting.id}
+          studentName={user.full_name}
+          alumniName={selectedAlumniForMeeting.name}
+        />
+      )}
     </div>
   );
 };

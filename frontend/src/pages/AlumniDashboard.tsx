@@ -8,7 +8,6 @@ import {
   TrendingUp,
   Plus,
   Search,
-  MessageCircle,
   MapPin,
   ExternalLink,
   Building,
@@ -19,12 +18,14 @@ import {
   Linkedin,
   GraduationCap,
   LogOut,
+  Calendar,
 } from 'lucide-react';
 import { useAlumniManagement } from '../hooks/useAlumniManagement';
 import { useDebounce } from '../hooks/useDebounce';
 import { useAuth } from '../context/AuthContext';
 import JobPostingForm from '../components/JobPostingForm';
 import MentorshipRequestRow from '../components/MentorshipRequestRow';
+import MeetingModal from '../components/MeetingModal';
 
 const AlumniDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -46,6 +47,8 @@ const AlumniDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'mentorship' | 'career'>('overview');
   const [isJobFormOpen, setIsJobFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
+  const [selectedMentee, setSelectedMentee] = useState<any>(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   const handleLogout = () => {
@@ -56,6 +59,11 @@ const AlumniDashboard: React.FC = () => {
   React.useEffect(() => {
     searchPeers(debouncedSearch);
   }, [debouncedSearch]);
+
+  const handleScheduleMeeting = (mentee: any) => {
+    setSelectedMentee(mentee);
+    setIsMeetingModalOpen(true);
+  };
 
   const pendingMentees = mentees.filter(m => m.status === 'pending');
   const activeMentees = mentees.filter(m => m.status === 'active');
@@ -256,9 +264,12 @@ const AlumniDashboard: React.FC = () => {
                               <p className="text-sm text-gray-600">{mentee.department}</p>
                             </div>
                           </div>
-                          <button className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm hover:bg-secondary transition-colors flex items-center gap-1.5">
-                            <MessageCircle size={16} />
-                            Chat
+                          <button 
+                            onClick={() => handleScheduleMeeting(mentee)}
+                            className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm hover:bg-secondary transition-colors flex items-center gap-1.5"
+                          >
+                            <Calendar size={16} />
+                            Schedule Meeting
                           </button>
                         </div>
                       </div>
@@ -339,9 +350,12 @@ const AlumniDashboard: React.FC = () => {
                           <h4 className="font-semibold text-gray-900">{mentee.name}</h4>
                           <p className="text-sm text-gray-600 mt-1">{mentee.department} • Class of {mentee.graduation_year}</p>
                           <div className="flex items-center gap-2 mt-3">
-                            <button className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-colors flex items-center justify-center gap-2 text-sm font-medium">
-                              <MessageCircle size={16} />
-                              Start Chat
+                            <button 
+                              onClick={() => handleScheduleMeeting(mentee)}
+                              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                            >
+                              <Calendar size={16} />
+                              Schedule Meeting
                             </button>
                             <a
                               href={`mailto:${mentee.email}`}
@@ -574,6 +588,22 @@ const AlumniDashboard: React.FC = () => {
         onClose={() => setIsJobFormOpen(false)}
         onSubmit={createJob}
       />
+
+      {/* Meeting Scheduling Modal */}
+      {selectedMentee && (
+        <MeetingModal
+          isOpen={isMeetingModalOpen}
+          onClose={() => {
+            setIsMeetingModalOpen(false);
+            setSelectedMentee(null);
+          }}
+          studentId={selectedMentee.id}
+          alumniId={selectedMentee.alumniId || ''}
+          mentorshipRequestId={selectedMentee.mentorshipRequestId}
+          studentName={selectedMentee.name}
+          alumniName={selectedMentee.alumniName}
+        />
+      )}
     </div>
   );
 };
