@@ -29,7 +29,7 @@ import MeetingModal from '../components/MeetingModal';
 
 const AlumniDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const {
     mentees,
     jobs,
@@ -590,7 +590,7 @@ const AlumniDashboard: React.FC = () => {
       />
 
       {/* Meeting Scheduling Modal */}
-      {selectedMentee && (
+      {selectedMentee && user && (
         <MeetingModal
           isOpen={isMeetingModalOpen}
           onClose={() => {
@@ -598,10 +598,10 @@ const AlumniDashboard: React.FC = () => {
             setSelectedMentee(null);
           }}
           studentId={selectedMentee.id}
-          alumniId={selectedMentee.alumniId || ''}
+          alumniId={user.id}
           mentorshipRequestId={selectedMentee.mentorshipRequestId}
           studentName={selectedMentee.name}
-          alumniName={selectedMentee.alumniName}
+          alumniName={user.full_name}
         />
       )}
     </div>
