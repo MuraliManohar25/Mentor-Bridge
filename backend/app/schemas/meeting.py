@@ -1,8 +1,8 @@
 """
 Pydantic schemas for meetings.
 """
-from pydantic import BaseModel, Field, ConfigDict
-from datetime import datetime
+from pydantic import BaseModel, Field, ConfigDict, field_validator
+from datetime import datetime, timezone
 from typing import Optional
 import uuid
 from app.models.meeting import MeetingStatus
@@ -18,6 +18,15 @@ class MeetingCreate(BaseModel):
     scheduled_at: datetime = Field(..., description="Scheduled date and time")
     duration_minutes: int = Field(..., ge=15, le=180, description="Duration in minutes (15-180)")
     meeting_link: Optional[str] = Field(None, max_length=500, description="Meeting link (Zoom, Google Meet, etc.)")
+
+    @field_validator("scheduled_at")
+    @classmethod
+    def scheduled_at_must_be_future(cls, value: datetime) -> datetime:
+        now = datetime.now(timezone.utc)
+        compare_value = value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+        if compare_value <= now:
+            raise ValueError("Meeting must be scheduled for a future date and time")
+        return value
 
 
 class MeetingUpdate(BaseModel):

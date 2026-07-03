@@ -94,19 +94,22 @@ async def create_mentorship_request(
     await db.refresh(mentorship_request)
     
     # Send WebSocket notification to alumni
-    await connection_manager.send_to_user(
-        user_id=request_data.alumni_id,
-        message={
-            "type": "mentorship_request",
-            "data": {
-                "request_id": str(mentorship_request.id),
-                "student_name": current_user.full_name,
-                "student_id": str(current_user.id),
-                "message": request_data.message,
-                "created_at": mentorship_request.created_at.isoformat()
+    try:
+        await connection_manager.send_to_user(
+            user_id=request_data.alumni_id,
+            message={
+                "type": "mentorship_request",
+                "data": {
+                    "request_id": str(mentorship_request.id),
+                    "student_name": current_user.full_name,
+                    "student_id": str(current_user.id),
+                    "message": request_data.message,
+                    "created_at": mentorship_request.created_at.isoformat()
+                }
             }
-        }
-    )
+        )
+    except Exception as e:
+        print(f"⚠️ Failed to send mentorship notification: {e}")
     
     return mentorship_request
 
@@ -221,17 +224,20 @@ async def update_mentorship_request(
     await db.refresh(mentorship_request)
     
     # Send WebSocket notification to student
-    await connection_manager.send_to_user(
-        user_id=mentorship_request.student_id,
-        message={
-            "type": "mentorship_response",
-            "data": {
-                "request_id": str(mentorship_request.id),
-                "status": update_data.status.value,
-                "alumni_name": current_user.full_name,
-                "updated_at": mentorship_request.updated_at.isoformat()
+    try:
+        await connection_manager.send_to_user(
+            user_id=mentorship_request.student_id,
+            message={
+                "type": "mentorship_response",
+                "data": {
+                    "request_id": str(mentorship_request.id),
+                    "status": update_data.status.value,
+                    "alumni_name": current_user.full_name,
+                    "updated_at": mentorship_request.updated_at.isoformat()
+                }
             }
-        }
-    )
+        )
+    except Exception as e:
+        print(f"⚠️ Failed to send mentorship notification: {e}")
     
     return mentorship_request

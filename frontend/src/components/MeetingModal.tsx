@@ -38,6 +38,10 @@ const MeetingModal: React.FC<MeetingModalProps> = ({
       setError('Title must be at least 5 characters long');
       return;
     }
+    if (meetingLink.trim() && !/^https?:\/\/.+/i.test(meetingLink.trim())) {
+      setError('Meeting link must start with http:// or https://');
+      return;
+    }
 
     setLoading(true);
     setError(null);

@@ -73,36 +73,23 @@ async def create_meeting(
         )
     
     # Verify mentorship relationship exists and is accepted
+    mentorship_conditions = [
+        MentorshipRequest.student_id == meeting_data.student_id,
+        MentorshipRequest.alumni_id == meeting_data.alumni_id,
+        MentorshipRequest.status == MentorshipRequestStatus.ACCEPTED,
+    ]
     if meeting_data.mentorship_request_id:
-        mentorship_query = select(MentorshipRequest).where(
-            and_(
-                MentorshipRequest.id == meeting_data.mentorship_request_id,
-                MentorshipRequest.student_id == meeting_data.student_id,
-                MentorshipRequest.alumni_id == meeting_data.alumni_id,
-                MentorshipRequest.status == MentorshipRequestStatus.ACCEPTED
-            )
+        mentorship_conditions.append(MentorshipRequest.id == meeting_data.mentorship_request_id)
+
+    mentorship_query = select(MentorshipRequest).where(and_(*mentorship_conditions))
+    mentorship_result = await db.execute(mentorship_query)
+    if not mentorship_result.scalar_one_or_none():
+        error_detail = (
+            "No active mentorship relationship found"
+            if meeting_data.mentorship_request_id
+            else "Must have an active mentorship relationship to schedule meetings"
         )
-        mentorship_result = await db.execute(mentorship_query)
-        if not mentorship_result.scalar_one_or_none():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No active mentorship relationship found"
-            )
-    else:
-        # Check if there's any accepted mentorship between these users
-        mentorship_query = select(MentorshipRequest).where(
-            and_(
-                MentorshipRequest.student_id == meeting_data.student_id,
-                MentorshipRequest.alumni_id == meeting_data.alumni_id,
-                MentorshipRequest.status == MentorshipRequestStatus.ACCEPTED
-            )
-        )
-        mentorship_result = await db.execute(mentorship_query)
-        if not mentorship_result.scalar_one_or_none():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Must have an active mentorship relationship to schedule meetings"
-            )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_detail)
     
     # Verify current user is either the student or alumni
     if current_user.id != meeting_data.student_id and current_user.id != meeting_data.alumni_id:
@@ -130,19 +117,22 @@ async def create_meeting(
     
     # Send WebSocket notification to the other party
     recipient_id = meeting_data.alumni_id if current_user.id == meeting_data.student_id else meeting_data.student_id
-    await connection_manager.send_to_user(
-        user_id=recipient_id,
-        message={
-            "type": "meeting_scheduled",
-            "data": {
-                "meeting_id": str(meeting.id),
-                "title": meeting.title,
-                "scheduled_at": meeting.scheduled_at.isoformat(),
-                "duration_minutes": meeting.duration_minutes,
-                "sender_name": current_user.full_name
+    try:
+        await connection_manager.send_to_user(
+            user_id=recipient_id,
+            message={
+                "type": "meeting_scheduled",
+                "data": {
+                    "meeting_id": str(meeting.id),
+                    "title": meeting.title,
+                    "scheduled_at": meeting.scheduled_at.isoformat(),
+                    "duration_minutes": meeting.duration_minutes,
+                    "sender_name": current_user.full_name
+                }
             }
-        }
-    )
+        )
+    except Exception as e:
+        print(f"⚠️ Failed to send meeting notification: {e}")
     
     return meeting
 
@@ -313,18 +303,21 @@ async def update_meeting(
     # Send notification if status changed
     if "status" in update_dict:
         recipient_id = meeting.alumni_id if current_user.id == meeting.student_id else meeting.student_id
-        await connection_manager.send_to_user(
-            user_id=recipient_id,
-            message={
-                "type": "meeting_updated",
-                "data": {
-                    "meeting_id": str(meeting.id),
-                    "status": meeting.status.value,
-                    "title": meeting.title,
-                    "updated_by": current_user.full_name
+        try:
+            await connection_manager.send_to_user(
+                user_id=recipient_id,
+                message={
+                    "type": "meeting_updated",
+                    "data": {
+                        "meeting_id": str(meeting.id),
+                        "status": meeting.status.value,
+                        "title": meeting.title,
+                        "updated_by": current_user.full_name
+                    }
                 }
-            }
-        )
+            )
+        except Exception as e:
+            print(f"⚠️ Failed to send meeting notification: {e}")
     
     return meeting
 
@@ -364,14 +357,17 @@ async def delete_meeting(
     
     # Send notification to the other party
     recipient_id = meeting.alumni_id if current_user.id == meeting.student_id else meeting.student_id
-    await connection_manager.send_to_user(
-        user_id=recipient_id,
-        message={
-            "type": "meeting_cancelled",
-            "data": {
-                "meeting_id": str(meeting.id),
-                "title": meeting.title,
-                "cancelled_by": current_user.full_name
+    try:
+        await connection_manager.send_to_user(
+            user_id=recipient_id,
+            message={
+                "type": "meeting_cancelled",
+                "data": {
+                    "meeting_id": str(meeting.id),
+                    "title": meeting.title,
+                    "cancelled_by": current_user.full_name
+                }
             }
-        }
-    )
+        )
+    except Exception as e:
+        print(f"⚠️ Failed to send meeting notification: {e}")

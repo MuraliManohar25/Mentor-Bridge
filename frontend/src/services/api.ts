@@ -91,6 +91,11 @@ export const getErrorMessage = (error: unknown): string => {
         const detail = data?.detail;
         if (typeof detail === 'string') return detail;
         
+        // No response received at all — genuine network/connectivity issue
+        if (!error.response) {
+            return 'Unable to reach the server. It may be waking up from sleep — please wait a moment and try again.';
+        }
+        
         return error.message || 'An error occurred';
     }
     return 'An unexpected error occurred';
