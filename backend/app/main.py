@@ -7,6 +7,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.core.config import settings
 from app.db.session import engine
 from app.db.init_db import init_db
@@ -91,13 +92,17 @@ app.add_middleware(
 
 
 # Global Exception Handlers
-@app.exception_handler(404)
-async def not_found_handler(request: Request, exc):
-    """Handle 404 Not Found errors."""
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """
+    Preserve the specific `detail` message raised by route handlers
+    (e.g. "Meeting not found", "User not found") instead of replacing
+    it with a generic string.
+    """
     return JSONResponse(
-        status_code=status.HTTP_404_NOT_FOUND,
+        status_code=exc.status_code,
         content={
-            "detail": "Resource not found",
+            "detail": exc.detail or "Resource not found",
             "path": str(request.url.path)
         }
     )
