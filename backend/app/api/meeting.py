@@ -47,10 +47,16 @@ async def create_meeting(
     alumni_result = await db.execute(alumni_query)
     alumni = alumni_result.scalar_one_or_none()
     
-    if not student or not alumni:
+    if not student:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            detail="Student not found"
+        )
+    
+    if not alumni:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Alumni not found"
         )
     
     # Verify roles
