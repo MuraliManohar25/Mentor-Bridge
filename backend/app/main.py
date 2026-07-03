@@ -132,6 +132,24 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """
+    Catches any exception not already handled by a more specific handler
+    above. Without this, an unexpected error bypasses FastAPI's exception
+    handling and is caught by Starlette's ServerErrorMiddleware instead —
+    which sits OUTSIDE the CORS middleware. That means the browser never
+    sees CORS headers on that response and reports a misleading "blocked
+    by CORS policy" error, even though the server did respond. This
+    guarantees every exception produces a normal, CORS-compliant response.
+    """
+    print(f"🔥 Unhandled exception on {request.method} {request.url.path}: {exc}")
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "Internal server error"},
+    )
+
+
 # Include API routes
 app.include_router(router, prefix="/api", tags=["api"])
 app.include_router(auth_router, prefix="/api", tags=["authentication"])
