@@ -597,9 +597,9 @@ const AlumniDashboard: React.FC = () => {
             setIsMeetingModalOpen(false);
             setSelectedMentee(null);
           }}
-          studentId={selectedMentee.id}
+          studentId={selectedMentee.studentId}
           alumniId={user.id}
-          mentorshipRequestId={selectedMentee.mentorshipRequestId}
+          mentorshipRequestId={selectedMentee.id}
           studentName={selectedMentee.name}
           alumniName={user.full_name}
         />

@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 
 export interface Mentee {
   id: string;
+  studentId: string;
   name: string;
   email: string;
   department: string;
@@ -54,6 +55,7 @@ export interface AlumniStats {
 
 const mapMentee = (req: any): Mentee => ({
   id: req.id,
+  studentId: req.student_id,
   name: req.student_name || 'Student',
   email: req.student_email || '',
   department: req.student_department || 'N/A',
