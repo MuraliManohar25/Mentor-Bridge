@@ -11,7 +11,7 @@ from app.models.mentorship import MentorshipRequest
 from app.models.user import Profile, User
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.resolved_database_url)
+config.set_main_option("sqlalchemy.url", settings.resolved_database_url.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
