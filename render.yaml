@@ -21,7 +21,7 @@ services:
       - key: DEBUG
         value: "False"
       - key: AUTO_CREATE_TABLES
-        value: "False"
+        value: "True"
       - key: CORS_ORIGINS
         fromService:
           type: web
