@@ -46,7 +46,6 @@ export const API_BASE = resolveApiBase();
 const apiClient = axios.create({
     baseURL: API_BASE,
     timeout: 60000,
-    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -76,8 +75,7 @@ apiClient.interceptors.response.use(
             try {
                 const response = await axios.post(
                     `${API_BASE}/auth/refresh`,
-                    {},
-                    { withCredentials: true }
+                    {}
                 );
                 const { access_token } = response.data;
                 localStorage.setItem('access_token', access_token);

@@ -133,7 +133,7 @@ class LoginRequest(BaseModel):
     """Login request schema."""
     email: EmailStr
     password: str
-    role: UserRole  # Role selection from dropdown
+    role: Optional[UserRole] = None  # Optional role filter
 
 
 class LoginResponse(BaseModel):

@@ -179,8 +179,8 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Verify role matches the selected role
-    if user.role != credentials.role:
+    # Verify role matches the selected role if specified
+    if credentials.role and user.role != credentials.role:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials for the selected role",
