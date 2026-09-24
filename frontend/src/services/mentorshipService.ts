@@ -1,8 +1,3 @@
-/**
- * Mentorship Service
- * 
- * API calls for mentorship request management
- */
 import apiClient, { getErrorMessage } from './api';
 
 export enum MentorshipStatus {
@@ -37,9 +32,6 @@ export interface UpdateMentorshipRequest {
     status: MentorshipStatus;
 }
 
-/**
- * Send a mentorship request (students only)
- */
 export const sendMentorshipRequest = async (
     data: CreateMentorshipRequest
 ): Promise<MentorshipRequest> => {
@@ -51,11 +43,6 @@ export const sendMentorshipRequest = async (
     }
 };
 
-/**
- * Get mentorship requests
- * - Alumni: incoming requests
- * - Students: sent requests
- */
 export const getMentorshipRequests = async (
     statusFilter?: MentorshipStatus,
     limit: number = 20,
@@ -74,9 +61,6 @@ export const getMentorshipRequests = async (
     }
 };
 
-/**
- * Update mentorship request status (alumni only)
- */
 export const updateRequestStatus = async (
     requestId: string,
     status: MentorshipStatus
@@ -92,8 +76,10 @@ export const updateRequestStatus = async (
     }
 };
 
-export default {
+export const mentorshipService = {
     sendMentorshipRequest,
     getMentorshipRequests,
     updateRequestStatus,
 };
+
+export default mentorshipService;

@@ -10,17 +10,26 @@ export interface User {
     full_name: string;
     role: UserRole;
     phone?: string;
+    department?: string;
     is_active: boolean;
     is_verified: boolean;
     created_at: string;
     profile?: {
         bio?: string;
+        avatar_url?: string;
         department?: string;
         graduation_year?: number;
         is_mentor?: boolean;
         current_company?: string;
         current_position?: string;
+        location?: string;
+        linkedin_url?: string;
+        availability?: string;
         mentorship_expertise?: string[];
+        interests?: string[];
+        career_interests?: string[];
+        points?: number;
+        badges?: string[];
     };
 }
 

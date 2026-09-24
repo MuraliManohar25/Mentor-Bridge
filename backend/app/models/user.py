@@ -80,13 +80,13 @@ class Profile(Base, UUIDMixin):
     User profile model with role-specific fields.
     
     Base fields for all users:
-    - bio, avatar_url, graduation_year, department
+    - bio, avatar_url, graduation_year, department, location, linkedin_url
     
     Alumni-specific fields:
-    - current_company, current_position, is_mentor, mentorship_expertise
+    - current_company, current_position, is_mentor, mentorship_expertise, availability
     
     Student-specific fields:
-    - interests
+    - interests, career_interests
     """
     __tablename__ = "profiles"
     
@@ -104,11 +104,14 @@ class Profile(Base, UUIDMixin):
     avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     graduation_year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     department: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    location: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    linkedin_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     
     # Alumni-Specific Fields
     current_company: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     current_position: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     is_mentor: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    availability: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default="Available")
     mentorship_expertise: Mapped[Optional[List[str]]] = mapped_column(
         JSON,
         nullable=True,
@@ -117,6 +120,20 @@ class Profile(Base, UUIDMixin):
     
     # Student-Specific Fields
     interests: Mapped[Optional[List[str]]] = mapped_column(
+        JSON,
+        nullable=True,
+        default=list
+    )
+    career_interests: Mapped[Optional[List[str]]] = mapped_column(
+        JSON,
+        nullable=True,
+        default=list
+    )
+    
+    # Gamification & Referral
+    referral_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    points: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    badges: Mapped[Optional[List[str]]] = mapped_column(
         JSON,
         nullable=True,
         default=list
@@ -143,4 +160,3 @@ class Profile(Base, UUIDMixin):
     
     def __repr__(self) -> str:
         return f"<Profile for user_id={self.user_id}>"
-

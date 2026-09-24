@@ -10,6 +10,12 @@ from app.models.mentorship import MentorshipRequest
 from app.models.job import Job
 from app.models.event import Event, EventRSVP
 from app.models.announcement import Announcement
+from app.models.community import Circle, CircleMember, CirclePost, CircleSession
+from app.models.feed import Post, PostReaction, PostComment
+from app.models.student_board import StudentBoardPost, StudentBoardResponse
+from app.models.messaging import Conversation, ConversationMember, Message
+from app.models.notification import Notification
+from app.models.referral import Referral
 import logging
 
 logger = logging.getLogger(__name__)

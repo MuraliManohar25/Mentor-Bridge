@@ -28,6 +28,7 @@ class UserOut(UserBase):
     """Schema for user response (excludes password)."""
     id: uuid.UUID
     phone: Optional[str] = None
+    department: Optional[str] = None
     is_active: bool
     is_verified: bool
     created_at: datetime
@@ -46,30 +47,34 @@ class ProfileBase(BaseModel):
     avatar_url: Optional[str] = Field(None, max_length=500)
     graduation_year: Optional[int] = Field(None, ge=1900, le=2100)
     department: Optional[str] = Field(None, max_length=255)
+    location: Optional[str] = Field(None, max_length=255)
+    linkedin_url: Optional[str] = Field(None, max_length=500)
 
 
 class ProfileCreate(ProfileBase):
     """Schema for profile creation."""
-    # Alumni-specific
     current_company: Optional[str] = Field(None, max_length=255)
     current_position: Optional[str] = Field(None, max_length=255)
     is_mentor: bool = False
+    availability: Optional[str] = "Available"
     mentorship_expertise: Optional[List[str]] = Field(default_factory=list)
-    
-    # Student-specific
     interests: Optional[List[str]] = Field(default_factory=list)
+    career_interests: Optional[List[str]] = Field(default_factory=list)
 
 
 class ProfileUpdate(ProfileBase):
     """Schema for profile updates."""
-    # Alumni-specific
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
     current_company: Optional[str] = Field(None, max_length=255)
     current_position: Optional[str] = Field(None, max_length=255)
     is_mentor: Optional[bool] = None
+    availability: Optional[str] = None
     mentorship_expertise: Optional[List[str]] = None
-    
-    # Student-specific
     interests: Optional[List[str]] = None
+    career_interests: Optional[List[str]] = None
+    location: Optional[str] = None
+    linkedin_url: Optional[str] = None
 
 
 class ProfileOut(ProfileBase):
@@ -77,14 +82,18 @@ class ProfileOut(ProfileBase):
     id: uuid.UUID
     user_id: uuid.UUID
     
-    # Alumni-specific
     current_company: Optional[str] = None
     current_position: Optional[str] = None
-    is_mentor: bool
+    is_mentor: bool = False
+    availability: Optional[str] = None
     mentorship_expertise: Optional[List[str]] = None
     
-    # Student-specific
     interests: Optional[List[str]] = None
+    career_interests: Optional[List[str]] = None
+    
+    referral_code: Optional[str] = None
+    points: int = 0
+    badges: Optional[List[str]] = None
     
     created_at: datetime
     updated_at: datetime
@@ -149,6 +158,7 @@ class AlumniPublicOut(BaseModel):
     full_name: str
     role: UserRole
     phone: Optional[str] = None
+    department: Optional[str] = None
     created_at: datetime
     profile: Optional[ProfileOut] = None
     
@@ -166,4 +176,3 @@ class AlumniSearchResponse(BaseModel):
 class MentorStatusUpdate(BaseModel):
     """Schema for updating mentor availability status."""
     is_mentor: bool
-

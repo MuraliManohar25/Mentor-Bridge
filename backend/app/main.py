@@ -8,9 +8,11 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
 from app.core.config import settings
 from app.db.session import engine
 from app.db.init_db import init_db
+
 from app.api.routes import router
 from app.api.auth import router as auth_router
 from app.api.alumni import router as alumni_router
@@ -20,6 +22,15 @@ from app.api.jobs import router as jobs_router
 from app.api.events import router as events_router
 from app.api.announcements import router as announcements_router
 from app.api.meeting import router as meeting_router
+
+from app.api.community import router as community_router
+from app.api.feed import router as feed_router
+from app.api.student_board import router as student_board_router
+from app.api.messaging import router as messaging_router
+from app.api.notification import router as notification_router
+from app.api.referral import router as referral_router
+from app.api.leaderboard import router as leaderboard_router
+from app.api.users import router as users_router
 
 
 # Security headers middleware
@@ -38,13 +49,6 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 async def lifespan(app: FastAPI):
     """
     Lifespan context manager for startup and shutdown events.
-    
-    Startup:
-    - Initialize database connection
-    - Create tables if they don't exist
-    
-    Shutdown:
-    - Close database connections gracefully
     """
     # Startup
     settings.validate_production_settings()
@@ -94,11 +98,6 @@ app.add_middleware(
 # Global Exception Handlers
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    """
-    Preserve the specific `detail` message raised by route handlers
-    (e.g. "Meeting not found", "User not found") instead of replacing
-    it with a generic string.
-    """
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -110,7 +109,6 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 @app.exception_handler(500)
 async def internal_server_error_handler(request: Request, exc):
-    """Handle 500 Internal Server errors."""
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
@@ -122,7 +120,6 @@ async def internal_server_error_handler(request: Request, exc):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Handle request validation errors."""
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
@@ -134,15 +131,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
-    """
-    Catches any exception not already handled by a more specific handler
-    above. Without this, an unexpected error bypasses FastAPI's exception
-    handling and is caught by Starlette's ServerErrorMiddleware instead —
-    which sits OUTSIDE the CORS middleware. That means the browser never
-    sees CORS headers on that response and reports a misleading "blocked
-    by CORS policy" error, even though the server did respond. This
-    guarantees every exception produces a normal, CORS-compliant response.
-    """
     print(f"🔥 Unhandled exception on {request.method} {request.url.path}: {exc}")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -161,10 +149,18 @@ app.include_router(events_router, prefix="/api", tags=["events"])
 app.include_router(announcements_router, prefix="/api", tags=["announcements"])
 app.include_router(meeting_router, prefix="/api", tags=["meetings"])
 
+app.include_router(community_router, prefix="/api", tags=["circles"])
+app.include_router(feed_router, prefix="/api", tags=["posts"])
+app.include_router(student_board_router, prefix="/api", tags=["student-board"])
+app.include_router(messaging_router, prefix="/api", tags=["messages"])
+app.include_router(notification_router, prefix="/api", tags=["notifications"])
+app.include_router(referral_router, prefix="/api", tags=["referrals"])
+app.include_router(leaderboard_router, prefix="/api", tags=["leaderboard"])
+app.include_router(users_router, prefix="/api", tags=["users"])
+
 
 @app.get("/")
 async def root():
-    """Root endpoint - API information."""
     return {
         "name": settings.APP_NAME,
         "version": "1.0.0",
@@ -181,4 +177,3 @@ if __name__ == "__main__":
         port=8000,
         reload=settings.DEBUG
     )
-

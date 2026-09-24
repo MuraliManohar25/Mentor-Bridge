@@ -1,8 +1,3 @@
-/**
- * Alumni Service
- * 
- * API calls for alumni discovery and profile management
- */
 import apiClient, { getErrorMessage } from './api';
 
 export interface Alumni {
@@ -10,6 +5,7 @@ export interface Alumni {
     email: string;
     full_name: string;
     role: string;
+    department?: string;
     profile?: {
         bio?: string;
         avatar_url?: string;
@@ -17,6 +13,9 @@ export interface Alumni {
         department?: string;
         current_company?: string;
         current_position?: string;
+        location?: string;
+        linkedin_url?: string;
+        availability?: string;
         is_mentor: boolean;
         mentorship_expertise?: string[];
     };
@@ -38,9 +37,6 @@ export interface AlumniSearchResponse {
     results: Alumni[];
 }
 
-/**
- * Search and filter alumni
- */
 export const getAlumni = async (params: AlumniSearchParams = {}): Promise<AlumniSearchResponse> => {
     try {
         const response = await apiClient.get<AlumniSearchResponse>('/alumni', { params });
@@ -50,9 +46,6 @@ export const getAlumni = async (params: AlumniSearchParams = {}): Promise<Alumni
     }
 };
 
-/**
- * Get single alumni profile by ID
- */
 export const getAlumniProfile = async (id: string): Promise<Alumni> => {
     try {
         const response = await apiClient.get<Alumni>(`/alumni/${id}`);
@@ -62,9 +55,6 @@ export const getAlumniProfile = async (id: string): Promise<Alumni> => {
     }
 };
 
-/**
- * Update mentor status (alumni only)
- */
 export const updateMentorStatus = async (isMentor: boolean): Promise<{ is_mentor: boolean; message: string }> => {
     try {
         const response = await apiClient.patch('/alumni/mentor-status', {
@@ -76,8 +66,10 @@ export const updateMentorStatus = async (isMentor: boolean): Promise<{ is_mentor
     }
 };
 
-export default {
+export const alumniService = {
     getAlumni,
     getAlumniProfile,
     updateMentorStatus,
 };
+
+export default alumniService;

@@ -8,9 +8,9 @@ export const getDashboardPath = (role: UserRole): string => {
         case 'admin':
             return '/admin/dashboard';
         case 'alumni':
-            return '/alumni/dashboard';
+            return '/alumni/home';
         default:
-            return '/student/dashboard';
+            return '/student/home';
     }
 };
 
@@ -24,7 +24,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center bg-background">
                 <LoadingSpinner />
             </div>
         );
