@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, GraduationCap, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getDashboardPath } from '../components/ProtectedRoute';
+import apiClient from '../services/api';
 
 const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -13,6 +14,11 @@ const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [capsLockOn, setCapsLockOn] = useState(false);
+
+    // Silently wake up backend server if hosted on free tier (e.g. Render)
+    useEffect(() => {
+        apiClient.get('/').catch(() => {});
+    }, []);
 
     // Check for Caps Lock
     const handleKeyDown = (e: React.KeyboardEvent) => {

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, GraduationCap, AlertCircle, ShieldCheck } from 'lucide-react';
 import type { UserRole } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
 import { getDashboardPath } from '../components/ProtectedRoute';
+import apiClient from '../services/api';
 
 // Password strength calculator
 const calculatePasswordStrength = (password: string): { strength: number; label: string; color: string } => {
@@ -47,6 +48,11 @@ const Signup: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [capsLockOn, setCapsLockOn] = useState(false);
+
+    // Silently wake up backend server if hosted on free tier (e.g. Render)
+    useEffect(() => {
+        apiClient.get('/').catch(() => {});
+    }, []);
 
     const passwordStrength = calculatePasswordStrength(formData.password);
 
