@@ -150,3 +150,55 @@ async def update_mentor_status(
         "is_mentor": profile.is_mentor,
         "message": f"Mentor status {'enabled' if profile.is_mentor else 'disabled'} successfully"
     }
+
+
+@router.get("/{alumni_id}", response_model=AlumniPublicOut)
+async def get_alumni_by_id(
+    alumni_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get detailed profile of a specific alumni mentor by user ID or profile ID.
+    
+    Args:
+        alumni_id: User UUID or Profile UUID string
+        db: Database session
+        
+    Returns:
+        AlumniPublicOut object containing user details and profile
+        
+    Raises:
+        HTTPException 404: If mentor profile not found
+    """
+    import uuid
+    try:
+        target_uuid = uuid.UUID(alumni_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invalid mentor ID format"
+        )
+        
+    query = (
+        select(User)
+        .join(Profile, User.id == Profile.user_id)
+        .options(joinedload(User.profile))
+        .where(
+            or_(
+                User.id == target_uuid,
+                Profile.id == target_uuid
+            )
+        )
+        .where(User.is_active == True)
+    )
+    
+    result = await db.execute(query)
+    alumnus = result.scalars().first()
+    
+    if not alumnus:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Mentor profile not found"
+        )
+        
+    return AlumniPublicOut.model_validate(alumnus)
